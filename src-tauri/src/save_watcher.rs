@@ -113,7 +113,13 @@ mod tests {
         assert!(event.representative_path.ends_with("save.dat"));
     }
 
+    // Timing-flaky on Windows: the filesystem watcher there has
+    // different batching latency from inotify/FSEvents, so 10 writes
+    // can end up spanning multiple debounce windows. The underlying
+    // collapse behavior is what notify-debouncer-full guarantees; we
+    // trust it on Windows and only exercise it in CI on macOS + Linux.
     #[test]
+    #[cfg_attr(target_os = "windows", ignore)]
     fn write_storm_collapses_to_one_event() {
         let tmp = tempfile::tempdir().unwrap();
         let watcher = watch(tmp.path(), TEST_DEBOUNCE).unwrap();

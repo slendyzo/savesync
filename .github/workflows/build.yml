@@ -103,13 +103,20 @@ jobs:
       # the same release across the matrix. Required secrets:
       # - TAURI_SIGNING_PRIVATE_KEY: contents of ~/.tauri/savesync-updater.key
       # - TAURI_SIGNING_PRIVATE_KEY_PASSWORD: empty in our setup
+      # NOTE: don't pass TAURI_SIGNING_PRIVATE_KEY_PASSWORD as an env
+      # var. Even when the secret doesn't exist, GitHub Actions
+      # interpolates `${{ secrets.X }}` as an empty string, which
+      # tauri's signer then tries to use as a decryption password
+      # and fails with "Wrong password for that key" because the key
+      # was generated unencrypted. Omitting the env line lets the
+      # signer see no password env var at all, which is what it
+      # expects for unencrypted keys.
       - name: Build Tauri app
         id: tauri
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || '' }}
           releaseName: "SaveSync ${{ github.ref_name }}"
