@@ -1,7 +1,15 @@
-# Tauri + React + Typescript
+# SaveSync
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
+Steam Cloud for any game. A portable, cross-platform app that syncs game saves
+between machines using a private GitHub repo as the backend. Works equally well
+with cracked games (FitGirl/DODI repacks) and legitimately-bought non-Steam
+games — anywhere Steam Cloud doesn't exist.
 
-## Recommended IDE Setup
+**Status:** in development. Phase 0 (scaffold + CI) and Phase 1 (sync engine —
+manifest, git wrapper, LFS routing, snapshot/diff, conflict resolution, CLI
+driver) are landed. Phases 2-5 (detection, onboarding, UI, release) in flight.
 
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+See [`docs/artifacts/savesync-spec.html`](docs/artifacts/savesync-spec.html)
+for the full v1 spec — locked decisions, architecture, scope.
+
+Built by [SaveSync contributors](https://github.com/slendyzo).
