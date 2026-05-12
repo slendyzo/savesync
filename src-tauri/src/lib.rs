@@ -1,3 +1,4 @@
+pub mod conflict;
 pub mod git;
 pub mod lfs;
 pub mod manifest;

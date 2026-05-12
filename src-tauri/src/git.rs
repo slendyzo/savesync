@@ -187,13 +187,44 @@ pub fn commit(
 
 /// Push `branch` to `origin`. Creates the branch on the remote if missing.
 pub fn push(repo: &Repository, branch: &str, auth: &GitAuth) -> Result<(), GitError> {
+    push_refspecs(repo, &[branch.to_string()], auth, false)
+}
+
+/// Force-push `branch` to `origin`, overwriting whatever the remote has.
+/// Used by conflict resolution after rewriting local `main` to the winner.
+pub fn push_force(repo: &Repository, branch: &str, auth: &GitAuth) -> Result<(), GitError> {
+    push_refspecs(repo, &[branch.to_string()], auth, true)
+}
+
+/// Push multiple branches in one network round-trip. Useful for pushing
+/// `main` + a new `backup/...` branch together after conflict resolution.
+pub fn push_many(
+    repo: &Repository,
+    branches: &[String],
+    auth: &GitAuth,
+    force: bool,
+) -> Result<(), GitError> {
+    push_refspecs(repo, branches, auth, force)
+}
+
+fn push_refspecs(
+    repo: &Repository,
+    branches: &[String],
+    auth: &GitAuth,
+    force: bool,
+) -> Result<(), GitError> {
     let mut remote = repo.find_remote("origin")?;
-    let refspec = format!("refs/heads/{branch}:refs/heads/{branch}");
+    let prefix = if force { "+" } else { "" };
+    let refspecs: Vec<String> = branches
+        .iter()
+        .map(|b| format!("{prefix}refs/heads/{b}:refs/heads/{b}"))
+        .collect();
     let callbacks = build_callbacks(auth);
     let mut push_opts = PushOptions::new();
     push_opts.remote_callbacks(callbacks);
+    let refs: Vec<&str> = refspecs.iter().map(String::as_str).collect();
     remote
-        .push(&[refspec.as_str()], Some(&mut push_opts))
+        .push(&refs, Some(&mut push_opts))
         .map_err(GitError::classify)?;
     Ok(())
 }
@@ -270,6 +301,44 @@ pub fn branch_exists(repo: &Repository, branch: &str) -> bool {
 /// Returns the OID `name` resolves to, or None if absent.
 pub fn rev_parse(repo: &Repository, name: &str) -> Option<git2::Oid> {
     repo.revparse_single(name).ok().map(|obj| obj.id())
+}
+
+/// Read the contents of a file at a specific commit. Returns `Ok(None)`
+/// if the path doesn't exist in that commit's tree (no error — the
+/// caller usually wants to treat missing-on-one-side as a valid case).
+pub fn read_blob_at(
+    repo: &Repository,
+    commit_oid: git2::Oid,
+    path_in_repo: &Path,
+) -> Result<Option<Vec<u8>>, GitError> {
+    let commit = repo.find_commit(commit_oid)?;
+    let tree = commit.tree()?;
+    let entry = match tree.get_path(path_in_repo) {
+        Ok(e) => e,
+        Err(e) if e.code() == git2::ErrorCode::NotFound => return Ok(None),
+        Err(e) => return Err(GitError::LibGit2(e)),
+    };
+    let obj = entry.to_object(repo)?;
+    let blob = obj
+        .as_blob()
+        .ok_or_else(|| GitError::LibGit2(git2::Error::from_str("expected blob at path")))?;
+    Ok(Some(blob.content().to_vec()))
+}
+
+/// Move `branch` to point at `target_oid`, regardless of ancestry. Used
+/// by conflict resolution to rewrite local `main` to the winner. The
+/// caller is responsible for checking out HEAD afterwards if they want
+/// the workdir to match.
+pub fn force_set_branch(
+    repo: &Repository,
+    branch: &str,
+    target_oid: git2::Oid,
+    reflog_msg: &str,
+) -> Result<(), GitError> {
+    let refname = format!("refs/heads/{branch}");
+    let mut r = repo.find_reference(&refname)?;
+    r.set_target(target_oid, reflog_msg)?;
+    Ok(())
 }
 
 /// Check whether `local_branch` and `origin/local_branch` have diverged. A
