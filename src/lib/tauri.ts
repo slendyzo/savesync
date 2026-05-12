@@ -51,6 +51,8 @@ export const api = {
   patConnect: (apiBase: string, token: string): Promise<UserInfo> =>
     invoke("pat_connect", { apiBase, token }),
 
+  oauthClientId: (): Promise<string | null> => invoke("oauth_client_id"),
+
   oauthStart: (clientId: string): Promise<DeviceCode> =>
     invoke("oauth_start", { clientId }),
 

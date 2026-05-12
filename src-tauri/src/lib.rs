@@ -22,6 +22,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             commands::pat_connect,
+            commands::oauth_client_id,
             commands::oauth_start,
             commands::oauth_poll,
             commands::github_create_repo,

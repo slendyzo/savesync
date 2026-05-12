@@ -27,6 +27,23 @@ const GITHUB_ACCOUNT: &str = "github:access_token";
 /// Account name for PAT auth against an arbitrary host.
 const HOST_PAT_PREFIX: &str = "pat:";
 
+/// GitHub OAuth App client_id, injected at build time via the
+/// `GITHUB_OAUTH_CLIENT_ID` env var. Returns `None` if the binary was
+/// built without one — the wizard falls back to PAT-only auth in that
+/// case.
+///
+/// Registering an OAuth App: github.com/settings/applications/new
+/// - Homepage URL: anything (we don't use it)
+/// - Authorization callback URL: anything (Device Flow doesn't use it)
+/// - Enable "Device flow" in the app settings after creation
+/// - Build with: `GITHUB_OAUTH_CLIENT_ID=Ov23xxx npm run tauri build`
+const OAUTH_CLIENT_ID: Option<&str> = option_env!("GITHUB_OAUTH_CLIENT_ID");
+
+#[tauri::command]
+pub fn oauth_client_id() -> Option<String> {
+    OAUTH_CLIENT_ID.map(|s| s.to_string())
+}
+
 /// Wire shape for [`InstalledGame`] — drops `PathBuf`s for the React
 /// side (it doesn't care that paths are `PathBuf` vs `String`).
 #[derive(Debug, Serialize)]
