@@ -49,6 +49,48 @@ pub struct LocalConfig {
 pub struct LocalGame {
     pub id: String,
     pub save_path: PathBuf,
+    /// User-friendly name shown in the UI. Defaults to a prettified
+    /// version of `id` when None (e.g. "elden-ring" → "Elden Ring").
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub display_name: Option<String>,
+    /// When true, the process watcher ignores this game's events and
+    /// the sync loop skips it. Game still appears in the UI.
+    #[serde(default)]
+    pub paused: bool,
+}
+
+impl LocalGame {
+    /// Build a fresh entry with sensible defaults. Used by upsert_game
+    /// when adding a new game.
+    pub fn new(id: String, save_path: PathBuf) -> Self {
+        Self {
+            id,
+            save_path,
+            display_name: None,
+            paused: false,
+        }
+    }
+
+    /// What to actually show in the UI — prefers display_name, falls
+    /// back to a prettified id.
+    pub fn display(&self) -> String {
+        self.display_name
+            .clone()
+            .unwrap_or_else(|| prettify_id(&self.id))
+    }
+}
+
+fn prettify_id(id: &str) -> String {
+    id.split('-')
+        .map(|word| {
+            let mut chars = word.chars();
+            match chars.next() {
+                Some(c) => c.to_uppercase().collect::<String>() + chars.as_str(),
+                None => String::new(),
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(" ")
 }
 
 impl LocalConfig {
@@ -68,12 +110,21 @@ impl LocalConfig {
         if let Some(g) = self.games.iter_mut().find(|g| g.id == id) {
             g.save_path = save_path;
         } else {
-            self.games.push(LocalGame { id, save_path });
+            self.games.push(LocalGame::new(id, save_path));
         }
     }
 
     pub fn find_game(&self, id: &str) -> Option<&LocalGame> {
         self.games.iter().find(|g| g.id == id)
+    }
+
+    pub fn find_game_mut(&mut self, id: &str) -> Option<&mut LocalGame> {
+        self.games.iter_mut().find(|g| g.id == id)
+    }
+
+    pub fn remove_game(&mut self, id: &str) -> Option<LocalGame> {
+        let pos = self.games.iter().position(|g| g.id == id)?;
+        Some(self.games.remove(pos))
     }
 
     pub fn from_json(raw: &str) -> Result<Self, LocalConfigError> {

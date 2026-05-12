@@ -16,11 +16,35 @@ use crate::{
     auth::{self, AuthClient, DeviceCode, UserInfo},
     credentials,
     games::TargetOs,
-    git::{self, GitAuth, GitIdentity},
+    git::{self, CommitInfo, GitAuth, GitIdentity},
     github::{self, Repo as GhRepo},
+    lfs::LfsConfig,
     local_config::{default_config_path, LocalConfig},
     steam::{self, InstalledGame},
+    sync::{self, PullOutcome, PushOutcome},
 };
+
+fn require_config() -> Result<LocalConfig, String> {
+    let path = default_config_path().map_err(|e| e.to_string())?;
+    LocalConfig::load_from(&path)
+        .map_err(|e| e.to_string())?
+        .ok_or_else(|| "not initialized".to_string())
+}
+
+fn resolve_auth(cfg: &LocalConfig) -> GitAuth {
+    let github_pat = credentials::load(&format!("{HOST_PAT_PREFIX}https://api.github.com"))
+        .ok()
+        .flatten();
+    let github_oauth = credentials::load(GITHUB_ACCOUNT).ok().flatten();
+    if let Some(token) = github_pat.or(github_oauth) {
+        return GitAuth::HttpsToken { token };
+    }
+    // Future: look up the host_api_base from the cfg's machine record
+    // and load that host's PAT. For v1, anything that wasn't GitHub
+    // PAT/OAuth falls back to no-auth (works for local-only test repos).
+    let _ = cfg;
+    GitAuth::None
+}
 
 /// Account name we store the GitHub access token under.
 const GITHUB_ACCOUNT: &str = "github:access_token";
@@ -219,6 +243,130 @@ pub fn add_game(args: AddGameArgs) -> Result<LocalConfig, String> {
 pub fn get_local_config() -> Result<Option<LocalConfig>, String> {
     let config_path = default_config_path().map_err(|e| e.to_string())?;
     LocalConfig::load_from(&config_path).map_err(|e| e.to_string())
+}
+
+/// Open the user's save folder in their native file manager. Used by
+/// the per-game detail "Open folder" button.
+#[tauri::command]
+pub fn open_save_folder(
+    app: tauri::AppHandle,
+    game_id: String,
+) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt;
+    let config_path = default_config_path().map_err(|e| e.to_string())?;
+    let cfg = LocalConfig::load_from(&config_path)
+        .map_err(|e| e.to_string())?
+        .ok_or_else(|| "not initialized".to_string())?;
+    let game = cfg
+        .find_game(&game_id)
+        .ok_or_else(|| format!("game '{game_id}' is not registered"))?;
+    let path = game.save_path.to_string_lossy().into_owned();
+    app.opener()
+        .open_path(path, None::<String>)
+        .map_err(|e| e.to_string())
+}
+
+/// Force a sync push from the per-game detail panel. Same as the
+/// process-watcher's exit-push, but user-triggered.
+#[tauri::command]
+pub fn force_push(game_id: String) -> Result<PushOutcome, String> {
+    let cfg = require_config()?;
+    let repo = git::open(&cfg.repo_path).map_err(|e| e.to_string())?;
+    let auth = resolve_auth(&cfg);
+    sync::push_game(
+        &cfg,
+        &repo,
+        &game_id,
+        &auth,
+        &LfsConfig::with_system_binary(),
+    )
+    .map_err(|e| e.to_string())
+}
+
+/// Force a sync pull from the per-game detail panel.
+#[tauri::command]
+pub fn force_pull(game_id: String) -> Result<PullOutcome, String> {
+    let cfg = require_config()?;
+    let repo = git::open(&cfg.repo_path).map_err(|e| e.to_string())?;
+    let auth = resolve_auth(&cfg);
+    sync::pull_game(&cfg, &repo, &game_id, &auth).map_err(|e| e.to_string())
+}
+
+/// Toggle a game's paused flag. Persists to LocalConfig immediately so
+/// state survives app restart.
+#[tauri::command]
+pub fn set_game_paused(game_id: String, paused: bool) -> Result<LocalConfig, String> {
+    let config_path = default_config_path().map_err(|e| e.to_string())?;
+    let mut cfg = LocalConfig::load_from(&config_path)
+        .map_err(|e| e.to_string())?
+        .ok_or_else(|| "not initialized".to_string())?;
+    let game = cfg
+        .find_game_mut(&game_id)
+        .ok_or_else(|| format!("game '{game_id}' is not registered"))?;
+    game.paused = paused;
+    cfg.save_to(&config_path).map_err(|e| e.to_string())?;
+    Ok(cfg)
+}
+
+/// Set a friendly display name. Doesn't change the underlying repo
+/// folder name — purely cosmetic for the UI.
+#[derive(Debug, Deserialize)]
+pub struct RenameGameArgs {
+    pub game_id: String,
+    pub display_name: Option<String>,
+}
+
+#[tauri::command]
+pub fn rename_game(args: RenameGameArgs) -> Result<LocalConfig, String> {
+    let config_path = default_config_path().map_err(|e| e.to_string())?;
+    let mut cfg = LocalConfig::load_from(&config_path)
+        .map_err(|e| e.to_string())?
+        .ok_or_else(|| "not initialized".to_string())?;
+    let game = cfg
+        .find_game_mut(&args.game_id)
+        .ok_or_else(|| format!("game '{}' is not registered", args.game_id))?;
+    game.display_name = args.display_name.filter(|s| !s.trim().is_empty());
+    cfg.save_to(&config_path).map_err(|e| e.to_string())?;
+    Ok(cfg)
+}
+
+/// Remove a game from the local config. Doesn't touch the data in the
+/// git repo — the user can re-add the same game later and the repo
+/// folder is still there.
+#[tauri::command]
+pub fn remove_game(game_id: String) -> Result<LocalConfig, String> {
+    let config_path = default_config_path().map_err(|e| e.to_string())?;
+    let mut cfg = LocalConfig::load_from(&config_path)
+        .map_err(|e| e.to_string())?
+        .ok_or_else(|| "not initialized".to_string())?;
+    cfg.remove_game(&game_id);
+    cfg.save_to(&config_path).map_err(|e| e.to_string())?;
+    Ok(cfg)
+}
+
+/// Commit history filtered to a single game's folder. Used by the
+/// per-game detail's history panel.
+#[tauri::command]
+pub fn list_game_commits(game_id: String, limit: usize) -> Result<Vec<CommitInfo>, String> {
+    let cfg = require_config()?;
+    let repo = git::open(&cfg.repo_path).map_err(|e| e.to_string())?;
+    git::list_commits_touching(
+        &repo,
+        "refs/heads/main",
+        std::path::Path::new(&game_id),
+        limit,
+    )
+    .map_err(|e| e.to_string())
+}
+
+/// List backup branches preserved for this game by the conflict
+/// resolver. The drawer lists them with restore-to-main affordances.
+#[tauri::command]
+pub fn list_game_backups(game_id: String) -> Result<Vec<String>, String> {
+    let cfg = require_config()?;
+    let repo = git::open(&cfg.repo_path).map_err(|e| e.to_string())?;
+    git::list_branches_with_prefix(&repo, &format!("backup/{game_id}/"))
+        .map_err(|e| e.to_string())
 }
 
 #[derive(Debug, Deserialize)]

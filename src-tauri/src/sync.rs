@@ -42,7 +42,7 @@ pub enum SyncError {
     NoSavePath(PathBuf),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct PushOutcome {
     pub committed: bool,
     pub commit_message: Option<String>,
@@ -51,13 +51,14 @@ pub struct PushOutcome {
     pub lfs_routed: Vec<PathBuf>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct PullOutcome {
     /// Whether the local repo's main branch was fast-forwarded.
     pub fast_forwarded: bool,
     /// Set if a conflict was resolved during this pull. The caller
     /// should still push afterwards (force) so the backup branch lands
     /// on the remote.
+    #[serde(skip_serializing)]
     pub conflict: Option<ConflictOutcome>,
     /// Files that were copied from repo→save folder.
     pub files_synced: usize,

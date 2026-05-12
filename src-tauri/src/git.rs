@@ -363,6 +363,104 @@ pub fn force_set_branch(
     Ok(())
 }
 
+/// One commit's metadata, serialized for the frontend's history view.
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct CommitInfo {
+    pub oid: String,
+    pub summary: String,
+    pub author_name: String,
+    pub author_email: String,
+    pub timestamp: i64,
+}
+
+/// Walk the commit history backwards from `ref_name` (e.g. `"main"`),
+/// returning the most recent `limit` commits whose tree touches
+/// `path_in_repo`. Used for the per-game history view — the game's
+/// folder is the path filter.
+pub fn list_commits_touching(
+    repo: &Repository,
+    ref_name: &str,
+    path_in_repo: &Path,
+    limit: usize,
+) -> Result<Vec<CommitInfo>, GitError> {
+    let target = match rev_parse(repo, ref_name) {
+        Some(o) => o,
+        None => return Ok(Vec::new()),
+    };
+    let mut walk = repo.revwalk()?;
+    walk.push(target)?;
+    walk.set_sorting(git2::Sort::TIME)?;
+
+    let mut out = Vec::new();
+    for step in walk {
+        if out.len() >= limit {
+            break;
+        }
+        let oid = match step {
+            Ok(o) => o,
+            Err(_) => continue,
+        };
+        let commit = match repo.find_commit(oid) {
+            Ok(c) => c,
+            Err(_) => continue,
+        };
+        if commit_touches(&commit, repo, path_in_repo)? {
+            let author = commit.author();
+            out.push(CommitInfo {
+                oid: oid.to_string(),
+                summary: commit.summary().unwrap_or("").to_string(),
+                author_name: author.name().unwrap_or("").to_string(),
+                author_email: author.email().unwrap_or("").to_string(),
+                timestamp: commit.time().seconds(),
+            });
+        }
+    }
+    Ok(out)
+}
+
+fn commit_touches(
+    commit: &git2::Commit<'_>,
+    repo: &Repository,
+    path_in_repo: &Path,
+) -> Result<bool, GitError> {
+    // For root (initial) commits, only check whether the path exists in
+    // the tree. For commits with parents, compare against the first
+    // parent's tree.
+    let tree = commit.tree()?;
+    if commit.parent_count() == 0 {
+        return Ok(tree.get_path(path_in_repo).is_ok());
+    }
+    let parent_tree = commit.parent(0)?.tree()?;
+    let mut opts = git2::DiffOptions::new();
+    opts.pathspec(path_in_repo);
+    let diff = repo.diff_tree_to_tree(Some(&parent_tree), Some(&tree), Some(&mut opts))?;
+    Ok(diff.deltas().len() > 0)
+}
+
+/// List local branches whose name starts with `prefix`. Used for the
+/// per-game "backup branches" view — passing `"backup/elden-ring/"`
+/// returns every backup commit the conflict module created for that
+/// game across all machines.
+pub fn list_branches_with_prefix(
+    repo: &Repository,
+    prefix: &str,
+) -> Result<Vec<String>, GitError> {
+    let mut out = Vec::new();
+    for entry in repo.branches(Some(BranchType::Local))? {
+        let (branch, _kind) = match entry {
+            Ok(t) => t,
+            Err(_) => continue,
+        };
+        if let Ok(Some(name)) = branch.name() {
+            if name.starts_with(prefix) {
+                out.push(name.to_string());
+            }
+        }
+    }
+    out.sort();
+    Ok(out)
+}
+
 /// Check whether `local_branch` and `origin/local_branch` have diverged. A
 /// branch has diverged when each side has commits not present on the other.
 pub fn has_diverged(repo: &Repository, branch: &str) -> Result<bool, GitError> {

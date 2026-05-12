@@ -18,6 +18,27 @@ export type Platform = "windows" | "linux" | "macos";
 export type LocalGame = {
   id: string;
   save_path: string;
+  display_name?: string | null;
+  paused?: boolean;
+};
+
+export type CommitInfo = {
+  oid: string;
+  summary: string;
+  author_name: string;
+  author_email: string;
+  timestamp: number;
+};
+
+export type PushOutcome = {
+  committed: boolean;
+  commit_message: string | null;
+  lfs_routed: string[];
+};
+
+export type PullOutcome = {
+  fast_forwarded: boolean;
+  files_synced: number;
 };
 
 export type LocalConfig = {
@@ -74,4 +95,30 @@ export const api = {
     invoke("add_game", { args }),
 
   getLocalConfig: (): Promise<LocalConfig | null> => invoke("get_local_config"),
+
+  openSaveFolder: (gameId: string): Promise<void> =>
+    invoke("open_save_folder", { gameId }),
+
+  forcePush: (gameId: string): Promise<PushOutcome> =>
+    invoke("force_push", { gameId }),
+
+  forcePull: (gameId: string): Promise<PullOutcome> =>
+    invoke("force_pull", { gameId }),
+
+  setGamePaused: (gameId: string, paused: boolean): Promise<LocalConfig> =>
+    invoke("set_game_paused", { gameId, paused }),
+
+  renameGame: (args: {
+    gameId: string;
+    displayName: string | null;
+  }): Promise<LocalConfig> => invoke("rename_game", { args }),
+
+  removeGame: (gameId: string): Promise<LocalConfig> =>
+    invoke("remove_game", { gameId }),
+
+  listGameCommits: (gameId: string, limit: number): Promise<CommitInfo[]> =>
+    invoke("list_game_commits", { gameId, limit }),
+
+  listGameBackups: (gameId: string): Promise<string[]> =>
+    invoke("list_game_backups", { gameId }),
 };
