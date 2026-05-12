@@ -12,4 +12,4 @@ driver) are landed. Phases 2-5 (detection, onboarding, UI, release) in flight.
 See [`docs/artifacts/savesync-spec.html`](docs/artifacts/savesync-spec.html)
 for the full v1 spec — locked decisions, architecture, scope.
 
-Built by [SaveSync contributors](https://github.com/slendyzo).
+Built by [Slendy](https://github.com/slendyzo).
