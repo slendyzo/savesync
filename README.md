@@ -1,7 +1,8 @@
 # SaveSync
 
-![MIT License](https://img.shields.io/badge/license-MIT-a78bfa?style=flat-square)
-![Platforms](https://img.shields.io/badge/platform-windows%20%C2%B7%20linux-555?style=flat-square)
+![License](https://img.shields.io/badge/license-MIT-a78bfa?style=flat-square)
+![Windows](https://img.shields.io/badge/windows-555?style=flat-square&logo=windows&logoColor=white)
+![Linux](https://img.shields.io/badge/linux-555?style=flat-square&logo=linux&logoColor=white)
 
 A portable, cross-platform desktop app that syncs your game saves between
 devices using a private git repo. Works with Steam, repacked games
