@@ -1,3 +1,4 @@
+pub mod git;
 pub mod manifest;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
