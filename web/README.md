@@ -11,31 +11,14 @@ Files:
 + `screenshots/` — images referenced from the landing page (currently
   just `hero.svg`, the marketing-style main-view mockup)
 
-## Deploying to your server
+## Deploying
 
-```bash
-# From the project root
-ssh -i ~/.ssh/id_ed25519 root@YOUR_SERVER_IP 'mkdir -p /var/www/savesync/screenshots'
-scp -i ~/.ssh/id_ed25519 -r \
-  web/index.html web/INSTALL.md web/screenshots \
-  root@YOUR_SERVER_IP:/var/www/savesync/
-```
+This is a static site — three files (`index.html` + `INSTALL.md` +
+`screenshots/`). Push the directory to any static host or a server
+running nginx / caddy.
 
-Then on the LXC, configure nginx to serve `/var/www/savesync/` at
-`savesync.savesync.app`. The Cloudflare Tunnel handles TLS + the
-public route.
-
-Suggested nginx server block:
-
-```nginx
-server {
-    listen 80;
-    server_name savesync.savesync.app;
-    root /var/www/savesync;
-    index index.html;
-    location / { try_files $uri $uri/ =404; }
-}
-```
+Specifics (server, paths, DNS) live in maintainer-local notes, not
+this repo.
 
 ## Updating
 
