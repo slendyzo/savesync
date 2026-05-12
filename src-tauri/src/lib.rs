@@ -1,4 +1,5 @@
 pub mod conflict;
+pub mod games;
 pub mod git;
 pub mod lfs;
 pub mod local_config;
