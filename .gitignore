@@ -31,5 +31,8 @@ src-tauri/gen/schemas
 # OS
 Thumbs.db
 
+# Local tool state (not shared)
+local-config/state.json
+
 # Lockfile noise from package manager swaps
 pnpm-lock.yaml
