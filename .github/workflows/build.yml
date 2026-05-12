@@ -71,14 +71,19 @@ jobs:
             file \
             libssl-dev \
             libayatana-appindicator3-dev \
-            libxdo-dev
+            libxdo-dev \
+            git-lfs
+
+      - name: Verify git-lfs (Windows)
+        if: matrix.target == 'windows'
+        run: git-lfs version
 
       - name: Install JS dependencies
         run: npm ci
 
       - name: Run cargo tests
         working-directory: ./src-tauri
-        run: cargo test --no-run --locked
+        run: cargo test --locked
 
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
