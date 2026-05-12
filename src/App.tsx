@@ -1,16 +1,19 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { Gamepad2, GitBranch, Sparkles, RefreshCw } from "lucide-react";
-import { Button } from "./ui/Button";
+import { Gamepad2, GitBranch, Sparkles, Loader2 } from "lucide-react";
+
 import { Card } from "./ui/Card";
-import { Modal } from "./ui/Modal";
-import { ToastProvider, useToast } from "./ui/Toast";
+import { ToastProvider } from "./ui/Toast";
 import { stagger, transitions } from "./ui/motion";
+import { api, type LocalConfig } from "./lib/tauri";
+import { WizardShell } from "./wizard/WizardShell";
 
-function Home() {
-  const { push } = useToast();
-  const [open, setOpen] = useState(false);
+type AppState =
+  | { kind: "loading" }
+  | { kind: "needs-onboarding" }
+  | { kind: "configured"; config: LocalConfig };
 
+function Home({ config }: { config: LocalConfig }) {
   return (
     <main className="mx-auto min-h-screen w-full max-w-5xl px-8 py-16">
       <motion.header
@@ -21,13 +24,15 @@ function Home() {
       >
         <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 font-mono text-[11px] text-text-3">
           <span className="h-1.5 w-1.5 rounded-full bg-good shadow-[0_0_8px] shadow-good" />
-          phase 0 · foundation
+          connected · {config.machine_name}
         </div>
         <h1 className="bg-gradient-to-b from-white to-text-2 bg-clip-text text-6xl font-bold tracking-tight text-transparent">
           SaveSync
         </h1>
         <p className="mt-3 max-w-xl text-lg font-light text-text-2">
-          Steam Cloud for any game. Your saves, your repo, every machine.
+          {config.games.length === 0
+            ? "No games tracked yet. Add one to start syncing."
+            : `Tracking ${config.games.length} game${config.games.length === 1 ? "" : "s"}.`}
         </p>
       </motion.header>
 
@@ -43,105 +48,103 @@ function Home() {
             <div className="text-xs font-medium uppercase tracking-wider text-text-3">
               Tracked games
             </div>
-            <div className="mt-1 text-3xl font-semibold">0</div>
-            <div className="mt-1 text-xs text-text-3">Add your first one</div>
+            <div className="mt-1 text-3xl font-semibold">{config.games.length}</div>
+            <div className="mt-1 text-xs text-text-3">
+              {config.games.length === 0 ? "Add your first one" : "Synced via this repo"}
+            </div>
           </Card>
         </motion.div>
         <motion.div variants={stagger.item}>
           <Card>
             <GitBranch className="mb-3 h-5 w-5 text-accent-2" />
             <div className="text-xs font-medium uppercase tracking-wider text-text-3">
-              Backups preserved
+              Repo
             </div>
-            <div className="mt-1 text-3xl font-semibold">0</div>
-            <div className="mt-1 text-xs text-text-3">Nothing ever lost</div>
+            <div className="mt-1 truncate font-mono text-sm">{config.repo_path}</div>
+            <div className="mt-1 text-xs text-text-3">Local clone</div>
           </Card>
         </motion.div>
         <motion.div variants={stagger.item}>
           <Card>
             <Sparkles className="mb-3 h-5 w-5 text-good" />
             <div className="text-xs font-medium uppercase tracking-wider text-text-3">
-              Last sync
+              Status
             </div>
-            <div className="mt-1 text-3xl font-semibold">—</div>
-            <div className="mt-1 text-xs text-text-3">Standing by</div>
+            <div className="mt-1 text-3xl font-semibold">Idle</div>
+            <div className="mt-1 text-xs text-text-3">Watching for game launches</div>
           </Card>
         </motion.div>
       </motion.section>
 
-      <motion.section
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ ...transitions.content, delay: 0.2 }}
-        className="mt-12 flex flex-wrap items-center gap-3"
-      >
-        <Button onClick={() => setOpen(true)}>
-          <Sparkles className="h-4 w-4" />
-          Connect GitHub
-        </Button>
-        <Button
-          variant="secondary"
-          onClick={() =>
-            push({
-              kind: "success",
-              title: "Synced successfully",
-              description: "elden-ring → main • from Desktop-PC",
-            })
-          }
+      {config.games.length > 0 && (
+        <motion.section
+          variants={stagger.container}
+          initial="initial"
+          animate="animate"
+          className="mt-12"
         >
-          <RefreshCw className="h-4 w-4" />
-          Trigger sync toast
-        </Button>
-        <Button
-          variant="ghost"
-          onClick={() =>
-            push({
-              kind: "warn",
-              title: "Conflict resolved",
-              description: "Loser preserved at backup/bg3/ROG-Ally-2026-05-12-2031",
-            })
-          }
-        >
-          Trigger warn toast
-        </Button>
-      </motion.section>
-
-      <Modal open={open} onClose={() => setOpen(false)}>
-        <div className="mb-1 text-xs font-medium uppercase tracking-wider text-text-3">
-          Step 1 of 3
-        </div>
-        <h2 className="text-xl font-semibold tracking-tight">Connect GitHub</h2>
-        <p className="mt-2 text-sm text-text-2">
-          We'll open your browser to authorize SaveSync. Your saves stay in a private
-          repo you control — we just need permission to read and write it.
-        </p>
-        <div className="mt-5 flex justify-end gap-2">
-          <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
-            Maybe later
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => {
-              setOpen(false);
-              push({
-                kind: "info",
-                title: "Device flow not wired up yet",
-                description: "Coming in Phase 3 (Onboarding)",
-              });
-            }}
-          >
-            Open browser
-          </Button>
-        </div>
-      </Modal>
+          <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-text-3">
+            Games
+          </h2>
+          <div className="space-y-2">
+            {config.games.map((game) => (
+              <motion.div key={game.id} variants={stagger.item}>
+                <Card>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium">{game.id}</div>
+                      <div className="mt-0.5 truncate font-mono text-xs text-text-3">
+                        {game.save_path}
+                      </div>
+                    </div>
+                    <span className="rounded-full bg-good/15 px-3 py-1 font-mono text-[10px] text-good">
+                      synced
+                    </span>
+                  </div>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </motion.section>
+      )}
     </main>
   );
 }
 
+function LoadingScreen() {
+  return (
+    <div className="flex min-h-screen items-center justify-center text-text-3">
+      <Loader2 className="h-5 w-5 animate-spin" />
+    </div>
+  );
+}
+
 export default function App() {
+  const [state, setState] = useState<AppState>({ kind: "loading" });
+
+  useEffect(() => {
+    api
+      .getLocalConfig()
+      .then((cfg) => {
+        if (cfg) setState({ kind: "configured", config: cfg });
+        else setState({ kind: "needs-onboarding" });
+      })
+      .catch(() => {
+        // If the bridge isn't ready / typecheck errors, fall through to
+        // onboarding rather than blocking the whole UI.
+        setState({ kind: "needs-onboarding" });
+      });
+  }, []);
+
   return (
     <ToastProvider>
-      <Home />
+      {state.kind === "loading" && <LoadingScreen />}
+      {state.kind === "needs-onboarding" && (
+        <WizardShell
+          onComplete={(config) => setState({ kind: "configured", config })}
+        />
+      )}
+      {state.kind === "configured" && <Home config={state.config} />}
     </ToastProvider>
   );
 }

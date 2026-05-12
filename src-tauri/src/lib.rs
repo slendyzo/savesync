@@ -1,4 +1,5 @@
 pub mod auth;
+pub mod commands;
 pub mod conflict;
 pub mod credentials;
 pub mod games;
@@ -17,6 +18,15 @@ pub mod watcher;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .invoke_handler(tauri::generate_handler![
+            commands::pat_connect,
+            commands::oauth_start,
+            commands::oauth_poll,
+            commands::init_repo,
+            commands::scan_steam,
+            commands::add_game,
+            commands::get_local_config,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

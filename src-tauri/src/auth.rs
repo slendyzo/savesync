@@ -20,7 +20,7 @@
 use std::thread::sleep;
 use std::time::{Duration, Instant};
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 /// GitHub's public hosts. The base URL is for the OAuth flow; the API
 /// base is for the `/user` validation call.
@@ -43,7 +43,7 @@ pub enum AuthError {
 
 /// Result of the initial device-code request. The UI shows `user_code`
 /// + `verification_uri`; the app keeps `device_code` for polling.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DeviceCode {
     pub device_code: String,
     pub user_code: String,
@@ -54,7 +54,7 @@ pub struct DeviceCode {
     pub interval: u64,
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccessToken {
     pub access_token: String,
     #[serde(default)]
@@ -65,7 +65,7 @@ pub struct AccessToken {
 
 /// Logged-in user info returned by `/user`. Used to validate a PAT and
 /// to display "Connected as @login" in the UI.
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserInfo {
     pub login: String,
     #[serde(default)]
