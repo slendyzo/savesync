@@ -53,10 +53,9 @@ const OAUTH_CLIENT_ID: Option<&str> = match option_env!("GITHUB_OAUTH_CLIENT_ID"
     None => OAUTH_CLIENT_ID_LITERAL,
 };
 
-/// Paste your registered OAuth App's client_id here, e.g.:
-///   Some("Ov23liABCDEF1234567")
-/// See OAUTH_CLIENT_ID above for the registration walkthrough.
-const OAUTH_CLIENT_ID_LITERAL: Option<&str> = None;
+/// SaveSync's GitHub OAuth App, registered on slendyzo's account.
+/// Public identifier — no client_secret, safe to commit.
+const OAUTH_CLIENT_ID_LITERAL: Option<&str> = Some("Ov23liyxYBw79R3DfPLC");
 
 #[tauri::command]
 pub fn oauth_client_id() -> Option<String> {
