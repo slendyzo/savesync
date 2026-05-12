@@ -1,3 +1,4 @@
+pub mod auth;
 pub mod conflict;
 pub mod credentials;
 pub mod games;

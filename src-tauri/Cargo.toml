@@ -37,7 +37,9 @@ sysinfo = "0.32"
 notify = "7"
 notify-debouncer-full = "0.4"
 keyring = { version = "3", features = ["apple-native", "windows-native", "linux-native"] }
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
 
 [dev-dependencies]
 pretty_assertions = "1"
 tempfile = "3"
+httpmock = "0.7"
