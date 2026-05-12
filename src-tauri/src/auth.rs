@@ -343,14 +343,14 @@ mod tests {
                 .path("/user")
                 .header("Authorization", "token ghp_test");
             then.status(200).json_body(serde_json::json!({
-                "login": "slendyzo",
-                "name": "the maintainer",
+                "login": "octocat",
+                "name": "The Octocat",
             }));
         });
 
         let info = validate_pat(&server.base_url(), "ghp_test").unwrap();
-        assert_eq!(info.login, "slendyzo");
-        assert_eq!(info.name.as_deref(), Some("the maintainer"));
+        assert_eq!(info.login, "octocat");
+        assert_eq!(info.name.as_deref(), Some("The Octocat"));
     }
 
     #[test]
