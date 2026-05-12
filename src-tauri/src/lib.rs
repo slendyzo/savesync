@@ -1,6 +1,7 @@
 pub mod git;
 pub mod lfs;
 pub mod manifest;
+pub mod snapshot;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {

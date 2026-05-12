@@ -27,6 +27,8 @@ uuid = { version = "1", features = ["v4", "serde"] }
 thiserror = "1"
 git2 = { version = "0.20", default-features = false, features = ["https", "ssh"] }
 tracing = "0.1"
+blake3 = "1"
+walkdir = "2"
 
 [dev-dependencies]
 pretty_assertions = "1"
