@@ -11,7 +11,6 @@ Files:
 + `screenshots/` — images referenced from the landing page (currently
   just `hero.svg`, the marketing-style main-view mockup)
 
-
 ## Deploying to your server
 
 ```bash
