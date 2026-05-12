@@ -6,10 +6,11 @@ Deploys are a single `scp` away.
 
 Files:
 
-- `index.html` — the landing page itself
-- `INSTALL.md` — linked from the footer
-- `screenshots/` — images referenced from the landing page (currently
++ `index.html` — the landing page itself
++ `INSTALL.md` — linked from the footer
++ `screenshots/` — images referenced from the landing page (currently
   just `hero.svg`, the marketing-style main-view mockup)
+
 
 ## Deploying to your server
 
