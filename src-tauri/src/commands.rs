@@ -27,17 +27,36 @@ const GITHUB_ACCOUNT: &str = "github:access_token";
 /// Account name for PAT auth against an arbitrary host.
 const HOST_PAT_PREFIX: &str = "pat:";
 
-/// GitHub OAuth App client_id, injected at build time via the
-/// `GITHUB_OAUTH_CLIENT_ID` env var. Returns `None` if the binary was
-/// built without one — the wizard falls back to PAT-only auth in that
-/// case.
+/// SaveSync's GitHub OAuth App client_id.
 ///
-/// Registering an OAuth App: github.com/settings/applications/new
-/// - Homepage URL: anything (we don't use it)
-/// - Authorization callback URL: anything (Device Flow doesn't use it)
-/// - Enable "Device flow" in the app settings after creation
-/// - Build with: `GITHUB_OAUTH_CLIENT_ID=Ov23xxx npm run tauri build`
-const OAUTH_CLIENT_ID: Option<&str> = option_env!("GITHUB_OAUTH_CLIENT_ID");
+/// PROJECT-MAINTAINER ONE-TIME SETUP (paste below, commit, done):
+///   1. Open https://github.com/settings/applications/new
+///   2. Application name: SaveSync · any URLs are fine (Device Flow
+///      doesn't use callback URLs but GitHub's form demands them)
+///   3. After creation, on the app's page, tick "Enable Device Flow"
+///   4. Copy the Client ID (looks like `Ov23li...`) and paste below,
+///      replacing `None` with `Some("Ov23li...")`
+///   5. Commit the change. Every SaveSync build from then on gets the
+///      seamless "Continue with GitHub" flow with zero user setup.
+///
+/// The client_id is a PUBLIC identifier — it's safe to commit. Device
+/// Flow has no client_secret, so the client_id alone can't impersonate
+/// anyone. GitHub CLI, GitHub Desktop, Tauri, Vercel CLI, and every
+/// other desktop tool with "Sign in with GitHub" all ship their
+/// client_id this way.
+///
+/// As a fallback for development, the env var GITHUB_OAUTH_CLIENT_ID
+/// is still respected at build time — useful if you want to test a
+/// different OAuth App without editing the source.
+const OAUTH_CLIENT_ID: Option<&str> = match option_env!("GITHUB_OAUTH_CLIENT_ID") {
+    Some(v) => Some(v),
+    None => OAUTH_CLIENT_ID_LITERAL,
+};
+
+/// Paste your registered OAuth App's client_id here, e.g.:
+///   Some("Ov23liABCDEF1234567")
+/// See OAUTH_CLIENT_ID above for the registration walkthrough.
+const OAUTH_CLIENT_ID_LITERAL: Option<&str> = None;
 
 #[tauri::command]
 pub fn oauth_client_id() -> Option<String> {
