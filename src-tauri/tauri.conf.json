@@ -36,6 +36,15 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "externalBin": ["bin/git-lfs"]
+    "externalBin": ["bin/git-lfs"],
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/slendyzo/savesync/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDJGOUY2MjBDMzhFQUY0RDgKUldUWTlPbzRER0tmTDZuOElaaVVYV0lNUmM2QmhIZFlLTk1iUEVmYWtITnROR0tidGQ5Q1pEK3AK"
+    }
   }
 }

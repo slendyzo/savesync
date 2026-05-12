@@ -34,5 +34,10 @@ Thumbs.db
 # Local tool state (not shared)
 local-config/state.json
 
+# Tauri updater signing keys (never commit private keys)
+updater.key
+updater.key.pub
+*.key
+
 # Lockfile noise from package manager swaps
 pnpm-lock.yaml

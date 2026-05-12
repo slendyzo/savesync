@@ -11,9 +11,10 @@ import {
 } from "lucide-react";
 
 import { Card } from "./ui/Card";
-import { ToastProvider } from "./ui/Toast";
+import { ToastProvider, useToast } from "./ui/Toast";
 import { stagger, transitions } from "./ui/motion";
 import { api, type LocalConfig, type LocalGame } from "./lib/tauri";
+import { checkForUpdate } from "./lib/updater";
 import { WizardShell } from "./wizard/WizardShell";
 import { GameDetailDrawer } from "./home/GameDetailDrawer";
 import { SettingsModal } from "./home/SettingsModal";
@@ -209,6 +210,30 @@ function LoadingScreen() {
   );
 }
 
+function UpdateChecker() {
+  const { push } = useToast();
+  useEffect(() => {
+    let cancelled = false;
+    checkForUpdate().then((update) => {
+      if (cancelled || !update) return;
+      push({
+        kind: "info",
+        title: `Update available: v${update.version}`,
+        description: "Restart to install. Your sync state is preserved.",
+      });
+      // Stash the install function on window for a "Restart to update"
+      // shortcut from the toast in a future iteration; for v1 the user
+      // sees the toast and the auto-installer kicks in on next launch.
+      (window as unknown as { __savesyncUpdate?: () => Promise<void> })
+        .__savesyncUpdate = update.install;
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [push]);
+  return null;
+}
+
 export default function App() {
   const [state, setState] = useState<AppState>({ kind: "loading" });
 
@@ -226,6 +251,7 @@ export default function App() {
 
   return (
     <ToastProvider>
+      <UpdateChecker />
       {state.kind === "loading" && <LoadingScreen />}
       {state.kind === "needs-onboarding" && (
         <WizardShell
