@@ -30,6 +30,14 @@ export type LocalConfig = {
   games: LocalGame[];
 };
 
+export type GhRepo = {
+  name: string;
+  full_name: string;
+  clone_url: string;
+  html_url: string;
+  private: boolean;
+};
+
 export type InstalledGameDto = {
   steam_appid: number;
   steam_display_name: string;
@@ -48,6 +56,9 @@ export const api = {
 
   oauthPoll: (clientId: string, device: DeviceCode): Promise<UserInfo> =>
     invoke("oauth_poll", { clientId, device }),
+
+  githubCreateRepo: (name: string): Promise<GhRepo> =>
+    invoke("github_create_repo", { name }),
 
   initRepo: (args: {
     repoUrl: string;

@@ -17,6 +17,7 @@ use crate::{
     credentials,
     games::TargetOs,
     git::{self, GitAuth, GitIdentity},
+    github::{self, Repo as GhRepo},
     local_config::{default_config_path, LocalConfig},
     steam::{self, InstalledGame},
 };
@@ -50,6 +51,21 @@ impl From<InstalledGame> for InstalledGameDto {
             is_auto_addable,
         }
     }
+}
+
+/// Create a private repo on the authenticated GitHub user's account
+/// (auto-init'd so it lands with an initial commit). Used by the
+/// wizard's default "we'll make a repo for you" flow.
+///
+/// Reads the GitHub PAT from the keychain — caller must have run
+/// `pat_connect` against `https://api.github.com` first.
+#[tauri::command]
+pub fn github_create_repo(name: String) -> Result<GhRepo, String> {
+    let token = credentials::load(&format!("{HOST_PAT_PREFIX}https://api.github.com"))
+        .map_err(|e| e.to_string())?
+        .or_else(|| credentials::load(GITHUB_ACCOUNT).ok().flatten())
+        .ok_or_else(|| "not authenticated yet — connect with a PAT first".to_string())?;
+    github::create_private_repo(&token, &name).map_err(|e| e.to_string())
 }
 
 /// Validate a PAT against a host's API and store it in the keychain.

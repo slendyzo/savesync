@@ -5,6 +5,7 @@ pub mod conflict;
 pub mod credentials;
 pub mod games;
 pub mod git;
+pub mod github;
 pub mod launcher;
 pub mod lfs;
 pub mod local_config;
@@ -23,6 +24,7 @@ pub fn run() {
             commands::pat_connect,
             commands::oauth_start,
             commands::oauth_poll,
+            commands::github_create_repo,
             commands::init_repo,
             commands::scan_steam,
             commands::add_game,
