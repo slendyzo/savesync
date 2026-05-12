@@ -9,6 +9,7 @@ pub mod local_config;
 pub mod manifest;
 pub mod save_watcher;
 pub mod snapshot;
+pub mod steam;
 pub mod sync;
 pub mod watcher;
 
