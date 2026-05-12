@@ -6,6 +6,7 @@ pub mod local_config;
 pub mod manifest;
 pub mod snapshot;
 pub mod sync;
+pub mod watcher;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
