@@ -31,10 +31,7 @@ src-tauri/gen/schemas
 # OS
 Thumbs.db
 
-# Local tool state (not shared)
-local-config/state.json
-
-# Local-only dev artifacts (specs, mockups, README previews — for the
+# Local-only dev artifacts (specs, mockups, audit reports — for the
 # project maintainer, not the public)
 docs/artifacts/*.html
 
@@ -45,7 +42,3 @@ updater.key.pub
 
 # Lockfile noise from package manager swaps
 pnpm-lock.yaml
-
-# Local dev tooling — local-only, not for public repo
-NOTES.md
-local-config/
