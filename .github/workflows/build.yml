@@ -85,6 +85,14 @@ jobs:
         working-directory: ./src-tauri
         run: cargo test --locked
 
+      - name: Fetch git-lfs sidecar for ${{ matrix.target }}
+        shell: bash
+        run: |
+          TRIPLE=$([[ "${{ matrix.target }}" == "linux" ]] \
+            && echo "x86_64-unknown-linux-gnu" \
+            || echo "x86_64-pc-windows-msvc")
+          ./scripts/fetch-git-lfs.sh "$TRIPLE"
+
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
