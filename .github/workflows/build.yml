@@ -101,6 +101,7 @@ jobs:
       # - TAURI_SIGNING_PRIVATE_KEY: contents of ~/.tauri/savesync-updater.key
       # - TAURI_SIGNING_PRIVATE_KEY_PASSWORD: empty in our setup
       - name: Build Tauri app
+        id: tauri
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -112,6 +113,29 @@ jobs:
           releaseDraft: true
           prerelease: false
           updaterJsonPreferNsis: true
+
+      # SignPath Windows signing — runs only when SIGNPATH_API_TOKEN
+      # is set as a repo secret. Until you've applied to SignPath's OSS
+      # program and uploaded the secrets, this step is a no-op and the
+      # released NSIS .exe will show a SmartScreen "unknown publisher"
+      # warning. See NOTES.md → "Code signing setup" for the apply +
+      # wire-secrets walkthrough.
+      - name: SignPath sign (Windows)
+        if: matrix.target == 'windows' && startsWith(github.ref, 'refs/tags/v') && env.SIGNPATH_API_TOKEN != ''
+        env:
+          SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
+          SIGNPATH_ORGANIZATION_ID: ${{ secrets.SIGNPATH_ORGANIZATION_ID }}
+          SIGNPATH_PROJECT_SLUG: ${{ secrets.SIGNPATH_PROJECT_SLUG }}
+          SIGNPATH_POLICY_SLUG: ${{ secrets.SIGNPATH_POLICY_SLUG }}
+        uses: signpath/github-action-submit-signing-request@v1
+        with:
+          api-token: ${{ env.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ env.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ env.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ env.SIGNPATH_POLICY_SLUG }}
+          github-artifact-id: ${{ steps.tauri.outputs.artifactPaths }}
+          wait-for-completion: true
+          output-artifact-directory: ./signed
 
       # Non-tag builds: keep the artifact upload for CI testing.
       - name: Upload artifacts (Linux)
