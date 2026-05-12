@@ -34,6 +34,8 @@ clap = { version = "4", features = ["derive", "env"] }
 dirs = "5"
 hostname = "0.4"
 sysinfo = "0.32"
+notify = "7"
+notify-debouncer-full = "0.4"
 
 [dev-dependencies]
 pretty_assertions = "1"

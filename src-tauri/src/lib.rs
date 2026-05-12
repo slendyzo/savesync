@@ -1,9 +1,11 @@
 pub mod conflict;
 pub mod games;
 pub mod git;
+pub mod launcher;
 pub mod lfs;
 pub mod local_config;
 pub mod manifest;
+pub mod save_watcher;
 pub mod snapshot;
 pub mod sync;
 pub mod watcher;
