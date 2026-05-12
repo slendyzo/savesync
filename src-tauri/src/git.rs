@@ -325,6 +325,28 @@ pub fn read_blob_at(
     Ok(Some(blob.content().to_vec()))
 }
 
+/// If `main` doesn't exist in this repo, create it with an empty
+/// initial commit and point HEAD at it. Idempotent — a no-op if `main`
+/// is already present. Used after cloning an empty bare repo so the
+/// first push has a branch to push.
+pub fn ensure_main_initialized(
+    repo: &Repository,
+    identity: &GitIdentity,
+) -> Result<(), GitError> {
+    if rev_parse(repo, "refs/heads/main").is_some() {
+        return Ok(());
+    }
+    let sig = signature(identity)?;
+    let mut index = repo.index()?;
+    let tree_id = index.write_tree()?;
+    let tree = repo.find_tree(tree_id)?;
+    let commit_oid = repo.commit(None, &sig, &sig, "chore: initialize", &tree, &[])?;
+    let commit = repo.find_commit(commit_oid)?;
+    repo.branch("main", &commit, true)?;
+    repo.set_head("refs/heads/main")?;
+    Ok(())
+}
+
 /// Move `branch` to point at `target_oid`, regardless of ancestry. Used
 /// by conflict resolution to rewrite local `main` to the winner. The
 /// caller is responsible for checking out HEAD afterwards if they want
