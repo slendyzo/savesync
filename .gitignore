@@ -45,3 +45,7 @@ updater.key.pub
 
 # Lockfile noise from package manager swaps
 pnpm-lock.yaml
+
+# Local dev tooling — local-only, not for public repo
+NOTES.md
+local-config/
