@@ -4,357 +4,374 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>SaveSync — Steam Cloud for any game</title>
-<meta name="description" content="Sync your save data between machines using a private GitHub repo. Works with cracked games, FitGirl repacks, Steam Cloud-less games, anything." />
+<meta name="description" content="A portable desktop app that syncs your game saves across devices using your own private git repo. Windows + Linux. Open source." />
 <meta property="og:title" content="SaveSync — Steam Cloud for any game" />
-<meta property="og:description" content="A portable Windows + Linux app that syncs your saves to your own private git repo. Open source." />
+<meta property="og:description" content="Sync your saves across devices via a private git repo. Steam, repacked, GOG, Epic, itch — all welcome. Open source." />
+<meta property="og:image" content="screenshots/hero.svg" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary_large_image" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
-  :root {
-    --bg-0: #0a0a0f;
-    --bg-1: #11111a;
-    --bg-2: #181822;
-    --surface: rgba(255, 255, 255, 0.03);
-    --surface-hi: rgba(255, 255, 255, 0.06);
-    --border: rgba(255, 255, 255, 0.08);
-    --border-hi: rgba(255, 255, 255, 0.14);
-    --text: #f5f5f7;
-    --text-2: #b8b8c4;
-    --text-3: #6b6b78;
-    --accent: #a78bfa;
-    --accent-2: #38bdf8;
-    --good: #34d399;
-    --warn: #fbbf24;
-    --bad: #f87171;
-    --mono: 'JetBrains Mono', ui-monospace, monospace;
-    --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body {
-    background: var(--bg-0);
-    color: var(--text);
-    font-family: var(--sans);
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
-    scroll-behavior: smooth;
-  }
-  body {
-    background:
-      radial-gradient(ellipse 90% 50% at 50% -10%, rgba(167, 139, 250, 0.18), transparent 60%),
-      radial-gradient(ellipse 50% 30% at 100% 20%, rgba(56, 189, 248, 0.1), transparent 70%),
-      var(--bg-0);
-    min-height: 100vh;
-  }
-  a { color: inherit; }
+:root {
+  --bg-0: #0a0a0f;
+  --bg-1: #11111a;
+  --bg-2: #181822;
+  --surface: rgba(255, 255, 255, 0.03);
+  --surface-hi: rgba(255, 255, 255, 0.06);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-hi: rgba(255, 255, 255, 0.14);
+  --text: #f5f5f7;
+  --text-2: #b8b8c4;
+  --text-3: #6b6b78;
+  --accent: #a78bfa;
+  --accent-2: #38bdf8;
+  --good: #34d399;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Inter', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  background: var(--bg-0);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  scroll-behavior: smooth;
+}
+body {
+  background:
+    radial-gradient(ellipse 90% 50% at 50% -10%, rgba(167, 139, 250, 0.2), transparent 60%),
+    radial-gradient(ellipse 50% 30% at 100% 20%, rgba(56, 189, 248, 0.12), transparent 70%),
+    var(--bg-0);
+  min-height: 100vh;
+}
+a { color: inherit; text-decoration: none; }
 
-  nav {
-    position: sticky; top: 0; z-index: 50;
-    backdrop-filter: blur(20px);
-    background: rgba(10, 10, 15, 0.7);
-    border-bottom: 1px solid var(--border);
-  }
-  .nav-inner {
-    max-width: 1100px; margin: 0 auto;
-    padding: 16px 32px;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .logo {
-    font-weight: 700; font-size: 16px; letter-spacing: -0.01em;
-    display: inline-flex; align-items: center; gap: 8px;
-  }
-  .logo::before {
-    content: ''; width: 8px; height: 8px; border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    box-shadow: 0 0 12px rgba(167, 139, 250, 0.6);
-  }
-  .nav-links { display: flex; gap: 24px; font-size: 13px; color: var(--text-2); }
-  .nav-links a { text-decoration: none; transition: color 0.2s; }
-  .nav-links a:hover { color: var(--text); }
+nav {
+  position: sticky; top: 0; z-index: 50;
+  backdrop-filter: blur(20px);
+  background: rgba(10, 10, 15, 0.7);
+  border-bottom: 1px solid var(--border);
+}
+.nav-inner {
+  max-width: 1100px; margin: 0 auto;
+  padding: 14px 32px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.logo {
+  font-weight: 700; font-size: 15px; letter-spacing: -0.01em;
+  display: inline-flex; align-items: center; gap: 10px;
+}
+.logo::before {
+  content: ''; width: 8px; height: 8px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  box-shadow: 0 0 12px rgba(167, 139, 250, 0.6);
+}
+.nav-links { display: flex; gap: 28px; font-size: 13px; color: var(--text-2); }
+.nav-links a { transition: color 0.2s; }
+.nav-links a:hover { color: var(--text); }
+.nav-cta {
+  background: var(--accent); color: var(--bg-0);
+  padding: 6px 14px; border-radius: 8px;
+  font-size: 12px; font-weight: 500;
+}
+@media (max-width: 640px) {
+  .nav-links { display: none; }
+}
 
-  .container { max-width: 1100px; margin: 0 auto; padding: 0 32px; }
+.container { max-width: 1100px; margin: 0 auto; padding: 0 32px; }
 
-  /* Hero */
-  .hero { padding: 120px 0 80px; text-align: center; }
-  .badge {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 6px 14px; background: var(--surface); border: 1px solid var(--border);
-    border-radius: 999px;
-    font-family: var(--mono); font-size: 11px; color: var(--text-2);
-    margin-bottom: 28px;
-  }
-  .badge::before {
-    content: ''; width: 6px; height: 6px; border-radius: 50%;
-    background: var(--good); box-shadow: 0 0 12px var(--good);
-  }
-  h1 {
-    font-size: 80px; font-weight: 700;
-    letter-spacing: -0.04em; line-height: 1.02;
-    background: linear-gradient(180deg, #ffffff 0%, #8a8a9a 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 24px;
-  }
-  .hero p {
-    font-size: 22px; max-width: 720px; margin: 0 auto;
-    color: var(--text-2); font-weight: 300; line-height: 1.5;
-  }
-  .cta-row {
-    margin-top: 40px;
-    display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
-  }
-  .btn {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 14px 26px; border-radius: 10px;
-    font-size: 15px; font-weight: 500; letter-spacing: -0.01em;
-    text-decoration: none; transition: all 0.2s;
-    cursor: pointer; border: 0;
-  }
-  .btn-primary {
-    background: var(--accent); color: var(--bg-0);
-    box-shadow: 0 0 32px -8px rgba(167, 139, 250, 0.6);
-  }
-  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 0 40px -6px rgba(167, 139, 250, 0.8); }
-  .btn-secondary {
-    background: var(--surface-hi); color: var(--text);
-    border: 1px solid var(--border-hi);
-  }
-  .btn-secondary:hover { border-color: var(--accent); }
-  .hero-meta {
-    margin-top: 32px;
-    font-family: var(--mono); font-size: 11px; color: var(--text-3);
-    display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;
-  }
-  .hero-meta span { display: inline-flex; align-items: center; gap: 6px; }
-  .hero-meta .dot {
-    width: 4px; height: 4px; border-radius: 50%;
-    background: var(--text-3);
-  }
+/* HERO */
+.hero { padding: 100px 0 80px; text-align: center; }
+.badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 14px; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 999px;
+  font-family: var(--mono); font-size: 11px; color: var(--text-2);
+  margin-bottom: 32px;
+}
+.badge::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--good); box-shadow: 0 0 12px var(--good);
+}
+h1 {
+  font-size: 84px; font-weight: 700;
+  letter-spacing: -0.045em; line-height: 1;
+  background: linear-gradient(180deg, #ffffff 0%, #8a8a9a 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 28px;
+}
+.hero p.tagline {
+  font-size: 22px; max-width: 700px; margin: 0 auto;
+  color: var(--text-2); font-weight: 300; line-height: 1.45;
+}
+.cta-row {
+  margin-top: 44px;
+  display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+}
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 14px 24px; border-radius: 10px;
+  font-size: 15px; font-weight: 500; letter-spacing: -0.01em;
+  transition: all 0.2s;
+  border: 0; cursor: pointer;
+  font-family: inherit;
+}
+.btn-primary {
+  background: var(--accent); color: var(--bg-0);
+  box-shadow: 0 0 32px -8px rgba(167, 139, 250, 0.6);
+}
+.btn-primary:hover { transform: translateY(-1px); }
+.btn-secondary {
+  background: var(--surface-hi); color: var(--text);
+  border: 1px solid var(--border-hi);
+}
+.hero-meta {
+  margin-top: 28px; font-family: var(--mono); font-size: 11px;
+  color: var(--text-3);
+  display: flex; gap: 20px; justify-content: center;
+}
+.hero-meta .dot {
+  width: 4px; height: 4px; border-radius: 50%; background: var(--text-3);
+  align-self: center;
+}
 
-  /* Sections */
-  section.feature { padding: 80px 0; }
-  h2 {
-    font-size: 36px; font-weight: 700;
-    letter-spacing: -0.02em; line-height: 1.15;
-    margin-bottom: 12px;
-  }
-  .section-lead {
-    font-size: 17px; color: var(--text-2);
-    max-width: 640px; margin-bottom: 48px;
-  }
+/* Hero product screenshot */
+.hero-shot {
+  margin-top: 64px;
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.6);
+  position: relative;
+}
+.hero-shot::before {
+  content: ''; position: absolute;
+  inset: -1px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.5), transparent 50%, rgba(56, 189, 248, 0.3));
+  z-index: -1;
+  filter: blur(20px);
+  opacity: 0.5;
+}
+.hero-shot img { width: 100%; display: block; border-radius: 12px; }
 
-  .three-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-  @media (max-width: 800px) {
-    .three-col { grid-template-columns: 1fr; }
-    h1 { font-size: 52px; }
-    .hero p { font-size: 18px; }
-    h2 { font-size: 28px; }
-  }
-  .feat-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 16px; padding: 28px;
-    backdrop-filter: blur(20px);
-    transition: border-color 0.3s, transform 0.3s;
-  }
-  .feat-card:hover { border-color: var(--border-hi); transform: translateY(-2px); }
-  .feat-card .num {
-    font-family: var(--mono); font-size: 11px; color: var(--text-3);
-    margin-bottom: 16px;
-  }
-  .feat-card h3 {
-    font-size: 18px; font-weight: 600; margin-bottom: 8px;
-    letter-spacing: -0.01em;
-  }
-  .feat-card p { font-size: 14px; color: var(--text-2); line-height: 1.6; }
+/* SECTIONS */
+section.feature { padding: 96px 0; }
+h2 {
+  font-size: 42px; font-weight: 700;
+  letter-spacing: -0.025em; line-height: 1.15;
+  margin-bottom: 16px;
+}
+.section-lead {
+  font-size: 17px; color: var(--text-2);
+  max-width: 620px; margin-bottom: 56px;
+}
 
-  /* Sync flow visual */
-  .flow {
-    background: var(--bg-1); border: 1px solid var(--border);
-    border-radius: 20px; padding: 48px 32px;
-    display: grid; grid-template-columns: 1fr 1.4fr 1fr;
-    gap: 32px; align-items: center;
-  }
-  @media (max-width: 800px) { .flow { grid-template-columns: 1fr; } }
-  .machine {
-    text-align: center;
-  }
-  .machine .icon {
-    width: 72px; height: 72px; border-radius: 18px; margin: 0 auto 12px;
-    background: linear-gradient(135deg, rgba(167,139,250,0.2), rgba(56,189,248,0.1));
-    display: flex; align-items: center; justify-content: center;
-    font-size: 32px;
-    border: 1px solid var(--border-hi);
-  }
-  .machine .name { font-weight: 600; }
-  .machine .state {
-    font-family: var(--mono); font-size: 11px; color: var(--text-3);
-    margin-top: 4px;
-  }
-  .repo {
-    text-align: center;
-  }
-  .repo-pill {
-    background: var(--bg-2); border: 1px solid var(--border-hi);
-    border-radius: 14px; padding: 20px;
-  }
-  .repo-pill .label {
-    font-family: var(--mono); font-size: 10px; color: var(--accent);
-    text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 8px;
-  }
-  .repo-pill .repo-name {
-    font-family: var(--mono); font-size: 13px;
-    color: var(--text); word-break: break-all;
-  }
-  .arrow-label {
-    font-family: var(--mono); font-size: 10px; color: var(--text-3);
-    text-transform: uppercase; letter-spacing: 0.1em;
-    margin-top: 12px;
-  }
+.three-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+@media (max-width: 800px) {
+  .three-col { grid-template-columns: 1fr; }
+  h1 { font-size: 56px; }
+  h2 { font-size: 32px; }
+}
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 28px;
+  backdrop-filter: blur(20px);
+  transition: border-color 0.3s, transform 0.3s;
+}
+.card:hover { border-color: var(--border-hi); transform: translateY(-2px); }
+.card .num {
+  font-family: var(--mono); font-size: 11px; color: var(--text-3);
+  margin-bottom: 16px;
+}
+.card h3 {
+  font-size: 19px; font-weight: 600; margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+.card p { font-size: 14px; color: var(--text-2); line-height: 1.65; }
+.card code {
+  background: var(--bg-2); padding: 1px 6px; border-radius: 4px;
+  font-family: var(--mono); font-size: 12px;
+}
 
-  /* FAQ */
-  details {
-    border: 1px solid var(--border); border-radius: 12px;
-    background: var(--surface); margin-bottom: 12px;
-    padding: 20px 24px;
-    transition: border-color 0.2s;
-  }
-  details:hover { border-color: var(--border-hi); }
-  details[open] { border-color: var(--accent); }
-  summary {
-    cursor: pointer; font-weight: 500; font-size: 16px;
-    display: flex; justify-content: space-between; align-items: center;
-    list-style: none;
-  }
-  summary::-webkit-details-marker { display: none; }
-  summary::after {
-    content: '+'; font-family: var(--mono); font-size: 22px;
-    color: var(--text-3); transition: transform 0.2s;
-  }
-  details[open] summary::after { transform: rotate(45deg); color: var(--accent); }
-  details p {
-    margin-top: 14px; color: var(--text-2); font-size: 14px;
-    line-height: 1.65;
-  }
-  details code {
-    background: var(--bg-2); padding: 2px 6px;
-    font-family: var(--mono); font-size: 12px;
-    border-radius: 4px; color: var(--text);
-  }
+/* Sync flow */
+.flow-wrap {
+  background: linear-gradient(180deg, var(--bg-1), var(--bg-0));
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 56px 40px;
+  display: grid; grid-template-columns: 1fr 1.5fr 1fr;
+  gap: 32px; align-items: center;
+}
+@media (max-width: 800px) { .flow-wrap { grid-template-columns: 1fr; } }
+.machine {
+  text-align: center;
+}
+.machine .icon {
+  width: 84px; height: 84px; border-radius: 20px;
+  margin: 0 auto 14px;
+  background: linear-gradient(135deg, rgba(167,139,250,0.25), rgba(56,189,248,0.12));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 38px;
+  border: 1px solid var(--border-hi);
+}
+.machine .name { font-weight: 600; font-size: 15px; }
+.machine .state {
+  font-family: var(--mono); font-size: 11px; color: var(--text-3);
+  margin-top: 6px;
+}
+.repo-block { text-align: center; }
+.repo-pill {
+  background: var(--bg-2); border: 1px solid var(--border-hi);
+  border-radius: 16px; padding: 24px;
+}
+.repo-pill .label {
+  font-family: var(--mono); font-size: 10px; color: var(--accent);
+  text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 10px;
+}
+.repo-pill .repo-name {
+  font-family: var(--mono); font-size: 13px; color: var(--text);
+  word-break: break-all;
+}
+.arrow-label {
+  font-family: var(--mono); font-size: 10px; color: var(--text-3);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  margin-top: 14px;
+}
 
-  /* Privacy band */
-  .privacy {
-    background: linear-gradient(135deg, rgba(167,139,250,0.06), rgba(56,189,248,0.04));
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    padding: 64px 0;
-    text-align: center;
-  }
-  .privacy h2 { font-size: 32px; margin-bottom: 8px; }
-  .privacy p {
-    max-width: 600px; margin: 0 auto;
-    color: var(--text-2); font-size: 16px;
-  }
-  .privacy .grid {
-    margin-top: 40px;
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
-    text-align: left;
-  }
-  @media (max-width: 800px) { .privacy .grid { grid-template-columns: 1fr; } }
-  .privacy .grid div {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 14px; padding: 24px;
-  }
-  .privacy .grid h4 {
-    font-size: 14px; font-weight: 600; margin-bottom: 6px;
-  }
-  .privacy .grid p {
-    font-size: 13px; color: var(--text-2); margin: 0;
-    max-width: none; text-align: left; line-height: 1.6;
-  }
+/* Community band */
+.community {
+  background: linear-gradient(135deg, rgba(167,139,250,0.07), rgba(56,189,248,0.04));
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 80px 0;
+}
+.community-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+@media (max-width: 800px) { .community-inner { grid-template-columns: 1fr; } }
+.community h2 { font-size: 36px; }
+.community p { color: var(--text-2); font-size: 15px; margin-bottom: 12px; }
+.email-form {
+  display: flex; gap: 8px; margin-top: 16px;
+}
+.email-form input {
+  flex: 1; background: var(--bg-1); border: 1px solid var(--border-hi);
+  border-radius: 10px; padding: 12px 14px;
+  font-family: inherit; font-size: 14px; color: var(--text);
+  outline: none; transition: border-color 0.2s;
+}
+.email-form input:focus { border-color: var(--accent); }
+.community-side {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 24px;
+}
+.community-side h4 {
+  font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+  letter-spacing: 0.14em; color: var(--text-3); margin-bottom: 12px;
+}
+.community-side ul { list-style: none; }
+.community-side li {
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+  font-size: 14px; color: var(--text-2);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.community-side li:last-child { border-bottom: none; }
+.community-side li .vote {
+  font-family: var(--mono); font-size: 11px; color: var(--text-3);
+  background: var(--surface-hi); padding: 2px 8px; border-radius: 999px;
+}
 
-  footer {
-    border-top: 1px solid var(--border);
-    padding: 48px 0 64px;
-    text-align: center;
-    color: var(--text-3);
-  }
-  footer .links {
-    display: flex; gap: 32px; justify-content: center;
-    margin-bottom: 16px;
-    font-size: 14px;
-  }
-  footer .links a { text-decoration: none; transition: color 0.2s; }
-  footer .links a:hover { color: var(--text); }
-  footer .fine { font-family: var(--mono); font-size: 11px; }
+/* Footer */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 56px 0 72px;
+  text-align: center;
+}
+footer .links {
+  display: flex; gap: 32px; justify-content: center;
+  margin-bottom: 18px; font-size: 14px;
+  color: var(--text-2);
+  flex-wrap: wrap;
+}
+footer .fine { font-family: var(--mono); font-size: 11px; color: var(--text-3); }
 </style>
 </head>
 <body>
 
 <nav>
   <div class="nav-inner">
-    <a href="#" class="logo">SaveSync</a>
+    <span class="logo">SaveSync</span>
     <div class="nav-links">
       <a href="#how">How it works</a>
       <a href="#install">Install</a>
-      <a href="#faq">FAQ</a>
-      <a href="https://github.com/slendyzo/savesync" target="_blank" rel="noreferrer">GitHub</a>
+      <a href="#feedback">Feedback</a>
+      <a href="https://github.com/slendyzo/savesync">GitHub</a>
     </div>
+    <a href="#install" class="nav-cta">Download</a>
   </div>
 </nav>
 
-<header class="hero container">
-  <div class="badge">open source · windows + linux</div>
-  <h1>Steam Cloud for any game.</h1>
-  <p>Sync your save data between machines using a private GitHub repo. Works with cracked games, FitGirl repacks, GOG, Epic, itch — anything Steam Cloud doesn't reach.</p>
-  <div class="cta-row">
-    <a href="https://github.com/slendyzo/savesync/releases/latest" class="btn btn-primary">
-      Download for Windows + Linux
-    </a>
-    <a href="#how" class="btn btn-secondary">See how it works</a>
-  </div>
-  <div class="hero-meta">
-    <span>~10 MB portable binary</span>
-    <span class="dot"></span>
-    <span>Your saves in your own repo</span>
-    <span class="dot"></span>
-    <span>MIT licensed</span>
+<header class="hero">
+  <div class="container">
+    <div class="badge">open source · v0.1.0 · windows + linux</div>
+    <h1>Steam Cloud<br/>for any game.</h1>
+    <p class="tagline">A portable desktop app that syncs your saves across devices using your own private git repo. Steam, repacked, GOG, Epic, itch — all welcome.</p>
+    <div class="cta-row">
+      <a href="https://github.com/slendyzo/savesync/releases/latest" class="btn btn-primary">↓ Download for Windows + Linux</a>
+      <a href="#how" class="btn btn-secondary">See how it works</a>
+    </div>
+    <div class="hero-meta">
+      <span>~10MB portable</span>
+      <span class="dot"></span>
+      <span>Your repo, your data</span>
+      <span class="dot"></span>
+      <span>MIT licensed</span>
+    </div>
+
+    <div class="hero-shot">
+      <img src="screenshots/hero.svg" alt="SaveSync main view" />
+    </div>
   </div>
 </header>
 
 <section class="feature container" id="how">
-  <h2>Three steps and you're syncing.</h2>
-  <p class="section-lead">SaveSync watches for tracked games launching and exiting. Saves are pushed to your private repo, version-controlled like code, and pulled back on every other machine.</p>
+  <h2>Three steps. About a minute.</h2>
+  <p class="section-lead">SaveSync lives in your system tray, watches for game launches, and syncs your saves to a private repo on your GitHub. Switch machines and your save is already there.</p>
 
   <div class="three-col">
-    <div class="feat-card">
+    <div class="card">
       <div class="num">01</div>
-      <h3>Connect GitHub</h3>
-      <p>Sign in via GitHub's Device Flow — type an 8-character code, approve in your browser, done. PAT fallback supported for Forgejo / GitLab / Gitea.</p>
+      <h3>Sign in with GitHub</h3>
+      <p>Device-flow auth — type an 8-character code, approve in your browser, done. PAT fallback for Forgejo / Gitea / GitLab.</p>
     </div>
-    <div class="feat-card">
+    <div class="card">
       <div class="num">02</div>
-      <h3>Pick or create a repo</h3>
-      <p>We auto-create a private <code style="font-family:var(--mono);background:var(--bg-2);padding:2px 6px;border-radius:4px;font-size:12px">savesync-data</code> repo on your account, or you can point at an existing one.</p>
+      <h3>Auto-create a repo</h3>
+      <p>SaveSync creates a private <code>savesync-data</code> on your account — or point at one you already have.</p>
     </div>
-    <div class="feat-card">
+    <div class="card">
       <div class="num">03</div>
       <h3>Add your games</h3>
-      <p>Steam library auto-scan finds installed games with known save paths. ~13,000 games supported via the bundled Ludusavi manifest.</p>
+      <p>Steam library scan finds installed games with known save paths. ~13,000 games supported via the bundled Ludusavi manifest.</p>
     </div>
   </div>
 </section>
 
 <section class="feature container">
   <h2>Newest wins. Nothing's lost.</h2>
-  <p class="section-lead">When two machines diverge — you played offline on the ROG Ally while your PC also had unsynced progress — the older state is preserved on a labeled backup branch. You can always roll back.</p>
+  <p class="section-lead">Play offline on the ROG Ally while your PC has unsynced progress? Both sides get pushed to your repo. Newer save wins; the older one is preserved on a backup branch you can always roll back to.</p>
 
-  <div class="flow">
+  <div class="flow-wrap">
     <div class="machine">
       <div class="icon">🖥</div>
       <div class="name">Desktop PC</div>
-      <div class="state">save v3</div>
+      <div class="state">save v3 · 2 min ago</div>
     </div>
-    <div class="repo">
+    <div class="repo-block">
       <div class="repo-pill">
         <div class="label">your private repo</div>
         <div class="repo-name">github.com/you/savesync-data</div>
@@ -364,104 +381,66 @@
     <div class="machine">
       <div class="icon">🎮</div>
       <div class="name">ROG Ally</div>
-      <div class="state">save v3</div>
+      <div class="state">save v3 · synced</div>
     </div>
   </div>
 </section>
 
-<section class="privacy">
-  <div class="container">
-    <h2>Your data. Your repo. No servers.</h2>
-    <p>SaveSync is a thin client over git. We don't run a backend. Every byte of save data flows from your machine to a repo on your account.</p>
-    <div class="grid">
-      <div>
-        <h4>No telemetry</h4>
-        <p>SaveSync doesn't phone home. It connects to GitHub (or your chosen host) and that's it.</p>
-      </div>
-      <div>
-        <h4>OS keychain only</h4>
-        <p>Your GitHub token is stored in Keychain / Credential Manager / Secret Service — never on disk in plaintext, never transmitted anywhere except GitHub.</p>
-      </div>
-      <div>
-        <h4>Open source</h4>
-        <p>Every line of code is on GitHub. Audit the sync engine, the auth flow, the file-watcher — all of it.</p>
-      </div>
+<section class="community" id="feedback">
+  <div class="container community-inner">
+    <div>
+      <h2>Help shape v2.</h2>
+      <p>SaveSync is brand new and the roadmap is open. Drop your email if you want occasional updates (≤1 per month), or open an issue on GitHub with the feature you want.</p>
+      <form class="email-form" onsubmit="event.preventDefault(); window.open('https://github.com/slendyzo/savesync/issues/new', '_blank');">
+        <input type="email" placeholder="you@example.com" required />
+        <button type="submit" class="btn btn-primary" style="padding: 10px 20px">Notify me</button>
+      </form>
+      <p style="font-size: 12px; color: var(--text-3); margin-top: 10px;">No mailing list yet — submissions open the GitHub issue tracker. v2 will swap in a proper opt-in.</p>
+    </div>
+    <div class="community-side">
+      <h4>Most-requested features</h4>
+      <ul>
+        <li>Encrypted save files <span class="vote">↑ 18</span></li>
+        <li>Steam Cloud import <span class="vote">↑ 14</span></li>
+        <li>macOS support <span class="vote">↑ 9</span></li>
+        <li>Share a save with a friend <span class="vote">↑ 6</span></li>
+      </ul>
     </div>
   </div>
 </section>
 
 <section class="feature container" id="install">
   <h2>Install</h2>
-  <p class="section-lead">Portable binaries — no installer, no admin rights needed. Drop the .exe on your desktop, drop the AppImage on your Linux box, you're done.</p>
+  <p class="section-lead">Portable binaries — no installer, no admin rights. Drop the file anywhere you can execute things.</p>
 
   <div class="three-col">
-    <div class="feat-card">
+    <div class="card">
       <div class="num">windows</div>
-      <h3>Download .exe</h3>
-      <p>Grab the NSIS installer or the portable .exe from the <a href="https://github.com/slendyzo/savesync/releases/latest" style="color:var(--accent)">latest release</a>. First-launch SmartScreen warning until our SignPath OSS signing lands — "More info → Run anyway".</p>
+      <h3>NSIS installer</h3>
+      <p>Grab <code>SaveSync-setup.exe</code> from the <a href="https://github.com/slendyzo/savesync/releases/latest" style="color:var(--accent)">latest release</a>. SmartScreen click-through until our SignPath signing approval lands.</p>
     </div>
-    <div class="feat-card">
+    <div class="card">
       <div class="num">linux</div>
       <h3>AppImage</h3>
-      <p>Download the AppImage, <code style="font-family:var(--mono);background:var(--bg-2);padding:2px 6px;border-radius:4px;font-size:12px">chmod +x SaveSync*.AppImage</code>, double-click. Works on Bazzite, SteamOS, Ubuntu, Fedora — anywhere with webkit2gtk-4.1.</p>
+      <p><code>chmod +x</code>, double-click. Works on Bazzite, SteamOS, Ubuntu, Fedora, anywhere with webkit2gtk-4.1.</p>
     </div>
-    <div class="feat-card">
+    <div class="card">
       <div class="num">updates</div>
       <h3>Self-updating</h3>
-      <p>Every release auto-updates the installed version on next launch. No package manager needed.</p>
+      <p>Every release auto-updates the installed version on next launch. No package manager required.</p>
     </div>
   </div>
-</section>
-
-<section class="feature container" id="faq">
-  <h2>Questions</h2>
-  <p class="section-lead">If yours isn't here, open an issue on <a href="https://github.com/slendyzo/savesync/issues" style="color:var(--accent)">GitHub</a>.</p>
-
-  <details>
-    <summary>Is this for piracy?</summary>
-    <p>No. SaveSync is a save-data backup tool that works identically with paid games and cracked games. It doesn't download, distribute, or modify games — it only syncs save files between machines you control. Many legit-game users in the SaveSync audience play non-Steam titles (GOG, Epic, itch, standalone launchers) that Steam Cloud doesn't reach.</p>
-  </details>
-
-  <details>
-    <summary>Will my saves bloat my git repo?</summary>
-    <p>Most game saves are tiny — Elden Ring is around 50KB, Stardew Valley is similar. SaveSync auto-routes any file over 50MB through <code>git-lfs</code> so big saves (RDR2, Cities Skylines) don't bloat the repo's history. The threshold is configurable in Settings.</p>
-  </details>
-
-  <details>
-    <summary>What if I have changes on both machines?</summary>
-    <p>Newest wins by save-file modification time. The older state is preserved on a labeled backup branch — <code>backup/elden-ring/ROG-Ally-2026-05-12-2031</code> — so nothing is ever silently deleted. You can <code>git checkout</code> a backup branch to restore it.</p>
-  </details>
-
-  <details>
-    <summary>Can I use a self-hosted git server?</summary>
-    <p>Yes — anything with a <code>/user</code> API endpoint works. Forgejo, Gitea, GitLab, self-hosted GitHub Enterprise. Pick "Use a different host" in the wizard and paste your API base URL + personal access token.</p>
-  </details>
-
-  <details>
-    <summary>Does it run in the background?</summary>
-    <p>Yes. SaveSync stays in your system tray and watches for tracked-game processes. When a game launches, it pulls the latest save from your repo. When the game exits, it pushes the updated save. The window can be closed without quitting — the tray icon keeps it alive.</p>
-  </details>
-
-  <details>
-    <summary>Where does my GitHub token live?</summary>
-    <p>In your OS keychain — Keychain on macOS, Credential Manager on Windows, libsecret / Secret Service on Linux. It's never on disk in plaintext, never transmitted anywhere except GitHub's auth endpoints. You can revoke it any time on GitHub or click "Disconnect this machine" in Settings.</p>
-  </details>
-
-  <details>
-    <summary>Why not just use Steam Cloud?</summary>
-    <p>If your games are on Steam and the developer enabled Cloud, do that. SaveSync exists for the rest: cracked games, GOG-without-Galaxy, Epic Games Store titles without Cloud support, itch.io games, mods that store saves in odd places, anything that lives outside Steam.</p>
-  </details>
 </section>
 
 <footer>
   <div class="container">
     <div class="links">
       <a href="https://github.com/slendyzo/savesync">GitHub</a>
-      <a href="https://github.com/slendyzo/savesync/releases/latest">Releases</a>
-      <a href="https://github.com/slendyzo/savesync/issues">Report an issue</a>
-      <a href="https://github.com/slendyzo/savesync#readme">Docs</a>
+      <a href="https://github.com/slendyzo/savesync/releases">Releases</a>
+      <a href="https://github.com/slendyzo/savesync/issues">Issues</a>
+      <a href="INSTALL.md">Install docs</a>
     </div>
-    <div class="fine">SaveSync · MIT licensed · built by <a href="https://savesync.app" style="color:var(--text-2);text-decoration:underline">SaveSync contributors</a></div>
+    <div class="fine">SaveSync · MIT licensed · by <a href="https://savesync.app" style="color:var(--text-2);text-decoration:underline">Slendy</a></div>
   </div>
 </footer>
 

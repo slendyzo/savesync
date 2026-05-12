@@ -1,13 +1,23 @@
 # SaveSync — web
 
 The static landing page for SaveSync. Self-contained HTML + inline CSS
-+ no JS dependencies, so deploys are a single `scp` away.
++ minimal JS (one inline submit handler), no framework, no build step.
+Deploys are a single `scp` away.
+
+Files:
+
+- `index.html` — the landing page itself
+- `INSTALL.md` — linked from the footer
+- `screenshots/` — images referenced from the landing page (currently
+  just `hero.svg`, the marketing-style main-view mockup)
 
 ## Deploying to your server
 
 ```bash
 # From the project root
-scp -i ~/.ssh/id_ed25519 web/index.html web/INSTALL.md \
+ssh -i ~/.ssh/id_ed25519 root@YOUR_SERVER_IP 'mkdir -p /var/www/savesync/screenshots'
+scp -i ~/.ssh/id_ed25519 -r \
+  web/index.html web/INSTALL.md web/screenshots \
   root@YOUR_SERVER_IP:/var/www/savesync/
 ```
 
