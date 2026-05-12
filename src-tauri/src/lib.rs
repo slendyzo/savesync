@@ -1,3 +1,4 @@
+pub mod add_game;
 pub mod auth;
 pub mod commands;
 pub mod conflict;
@@ -26,6 +27,7 @@ pub fn run() {
             commands::scan_steam,
             commands::add_game,
             commands::get_local_config,
+            commands::inspect_game,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

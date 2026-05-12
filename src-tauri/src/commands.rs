@@ -12,10 +12,11 @@ use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    add_game::{detect_save_state, AddReport},
     auth::{self, AuthClient, DeviceCode, UserInfo},
     credentials,
     games::TargetOs,
-    git::{GitAuth, GitIdentity},
+    git::{self, GitAuth, GitIdentity},
     local_config::{default_config_path, LocalConfig},
     steam::{self, InstalledGame},
 };
@@ -167,6 +168,27 @@ pub fn add_game(args: AddGameArgs) -> Result<LocalConfig, String> {
 pub fn get_local_config() -> Result<Option<LocalConfig>, String> {
     let config_path = default_config_path().map_err(|e| e.to_string())?;
     LocalConfig::load_from(&config_path).map_err(|e| e.to_string())
+}
+
+#[derive(Debug, Deserialize)]
+pub struct InspectGameArgs {
+    pub game_id: String,
+    pub save_path: String,
+}
+
+/// Inspect a game's existing-save state before committing the add.
+/// Returns the four-way classification (Initial / LocalOnly /
+/// RemoteOnly / Both) plus per-side stats so the UI can render the
+/// 3-way chooser when both sides have data.
+#[tauri::command]
+pub fn inspect_game(args: InspectGameArgs) -> Result<AddReport, String> {
+    let config_path = default_config_path().map_err(|e| e.to_string())?;
+    let cfg = LocalConfig::load_from(&config_path)
+        .map_err(|e| e.to_string())?
+        .ok_or_else(|| "not initialized — run init_repo first".to_string())?;
+    let repo = git::open(&cfg.repo_path).map_err(|e| e.to_string())?;
+    detect_save_state(&repo, &args.game_id, std::path::Path::new(&args.save_path))
+        .map_err(|e| e.to_string())
 }
 
 #[cfg(test)]
