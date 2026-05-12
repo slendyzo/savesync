@@ -43,6 +43,9 @@ pub fn run() {
             commands::remove_game,
             commands::list_game_commits,
             commands::list_game_backups,
+            commands::rename_machine,
+            commands::update_preferences,
+            commands::disconnect_machine,
         ])
         .setup(|app| {
             build_tray(app.handle())?;

@@ -43,6 +43,33 @@ pub struct LocalConfig {
     /// different machines.
     #[serde(default)]
     pub games: Vec<LocalGame>,
+    /// User-tunable preferences. Lives on the same struct rather than
+    /// a separate file so a single load/save round-trip handles
+    /// everything that's machine-local.
+    #[serde(default)]
+    pub preferences: Preferences,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Preferences {
+    /// Seconds between process-list polls. Lower = more responsive,
+    /// higher = lower CPU. Default 3.
+    pub polling_interval_seconds: u32,
+    /// File size threshold above which `lfs::route_large_files` pushes
+    /// the file through Git LFS. In megabytes. Default 50.
+    pub lfs_threshold_mb: u32,
+    /// Re-enable the watcher automatically when the app launches.
+    pub sync_on_startup: bool,
+}
+
+impl Default for Preferences {
+    fn default() -> Self {
+        Self {
+            polling_interval_seconds: 3,
+            lfs_threshold_mb: 50,
+            sync_on_startup: true,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -103,6 +130,7 @@ impl LocalConfig {
             platform: current_platform(),
             repo_path,
             games: Vec::new(),
+            preferences: Preferences::default(),
         }
     }
 
@@ -209,6 +237,32 @@ mod tests {
         cfg.upsert_game("g".into(), PathBuf::from("/new"));
         assert_eq!(cfg.games.len(), 1);
         assert_eq!(cfg.find_game("g").unwrap().save_path, PathBuf::from("/new"));
+    }
+
+    #[test]
+    fn new_config_has_default_preferences() {
+        let cfg = LocalConfig::new("M".into(), PathBuf::from("/tmp/r"));
+        assert_eq!(cfg.preferences.polling_interval_seconds, 3);
+        assert_eq!(cfg.preferences.lfs_threshold_mb, 50);
+        assert!(cfg.preferences.sync_on_startup);
+    }
+
+    #[test]
+    fn legacy_config_without_preferences_loads_with_defaults() {
+        // Schema version 1 originally didn't have preferences. The
+        // serde(default) attribute means older configs read cleanly
+        // with default values.
+        let raw = r#"{
+            "schema_version": 1,
+            "machine_id": "11111111-1111-4111-8111-111111111111",
+            "machine_name": "OldMachine",
+            "hostname": "old-host",
+            "platform": "linux",
+            "repo_path": "/tmp/r",
+            "games": []
+        }"#;
+        let cfg = LocalConfig::from_json(raw).unwrap();
+        assert_eq!(cfg.preferences, Preferences::default());
     }
 
     #[test]

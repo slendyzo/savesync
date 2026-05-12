@@ -297,6 +297,7 @@ mod tests {
             machine_name: machine_name.into(),
             hostname: "test-host".into(),
             platform: Platform::Linux,
+            preferences: Default::default(),
             repo_path,
             games: Vec::new(),
         };

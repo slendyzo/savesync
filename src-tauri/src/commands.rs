@@ -330,6 +330,71 @@ pub fn rename_game(args: RenameGameArgs) -> Result<LocalConfig, String> {
     Ok(cfg)
 }
 
+/// Rename this machine. Cosmetic — affects how commits are labeled
+/// going forward (and the backup-branch labels on this machine's side
+/// of any future conflicts).
+#[tauri::command]
+pub fn rename_machine(new_name: String) -> Result<LocalConfig, String> {
+    let trimmed = new_name.trim();
+    if trimmed.is_empty() {
+        return Err("machine name can't be empty".to_string());
+    }
+    let config_path = default_config_path().map_err(|e| e.to_string())?;
+    let mut cfg = LocalConfig::load_from(&config_path)
+        .map_err(|e| e.to_string())?
+        .ok_or_else(|| "not initialized".to_string())?;
+    cfg.machine_name = trimmed.to_string();
+    cfg.save_to(&config_path).map_err(|e| e.to_string())?;
+    Ok(cfg)
+}
+
+#[derive(Debug, Deserialize)]
+pub struct PreferencesArgs {
+    pub polling_interval_seconds: u32,
+    pub lfs_threshold_mb: u32,
+    pub sync_on_startup: bool,
+}
+
+/// Replace the entire `preferences` block in one call. The settings UI
+/// edits all fields together so we don't need fine-grained setters.
+#[tauri::command]
+pub fn update_preferences(prefs: PreferencesArgs) -> Result<LocalConfig, String> {
+    let config_path = default_config_path().map_err(|e| e.to_string())?;
+    let mut cfg = LocalConfig::load_from(&config_path)
+        .map_err(|e| e.to_string())?
+        .ok_or_else(|| "not initialized".to_string())?;
+    if prefs.polling_interval_seconds == 0 || prefs.polling_interval_seconds > 60 {
+        return Err("polling_interval_seconds must be 1..=60".to_string());
+    }
+    if prefs.lfs_threshold_mb == 0 || prefs.lfs_threshold_mb > 5000 {
+        return Err("lfs_threshold_mb must be 1..=5000".to_string());
+    }
+    cfg.preferences = crate::local_config::Preferences {
+        polling_interval_seconds: prefs.polling_interval_seconds,
+        lfs_threshold_mb: prefs.lfs_threshold_mb,
+        sync_on_startup: prefs.sync_on_startup,
+    };
+    cfg.save_to(&config_path).map_err(|e| e.to_string())?;
+    Ok(cfg)
+}
+
+/// Tear down this machine's SaveSync setup. Removes the local config
+/// and every credential we stored. Does NOT touch the git repo on
+/// disk or the user's save folders — those are still under the user's
+/// control. After this, the next launch shows the wizard again.
+#[tauri::command]
+pub fn disconnect_machine() -> Result<(), String> {
+    let config_path = default_config_path().map_err(|e| e.to_string())?;
+    // Wipe credentials. Best-effort — keychain delete on a missing
+    // entry is already a no-op in our wrapper.
+    let _ = credentials::delete(GITHUB_ACCOUNT);
+    let _ = credentials::delete(&format!("{HOST_PAT_PREFIX}https://api.github.com"));
+    if config_path.exists() {
+        std::fs::remove_file(&config_path).map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
 /// Remove a game from the local config. Doesn't touch the data in the
 /// git repo — the user can re-add the same game later and the repo
 /// folder is still there.

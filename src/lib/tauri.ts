@@ -41,6 +41,12 @@ export type PullOutcome = {
   files_synced: number;
 };
 
+export type Preferences = {
+  polling_interval_seconds: number;
+  lfs_threshold_mb: number;
+  sync_on_startup: boolean;
+};
+
 export type LocalConfig = {
   schema_version: number;
   machine_id: string;
@@ -49,6 +55,7 @@ export type LocalConfig = {
   platform: Platform;
   repo_path: string;
   games: LocalGame[];
+  preferences: Preferences;
 };
 
 export type GhRepo = {
@@ -121,4 +128,12 @@ export const api = {
 
   listGameBackups: (gameId: string): Promise<string[]> =>
     invoke("list_game_backups", { gameId }),
+
+  renameMachine: (newName: string): Promise<LocalConfig> =>
+    invoke("rename_machine", { newName }),
+
+  updatePreferences: (prefs: Preferences): Promise<LocalConfig> =>
+    invoke("update_preferences", { prefs }),
+
+  disconnectMachine: (): Promise<void> => invoke("disconnect_machine"),
 };

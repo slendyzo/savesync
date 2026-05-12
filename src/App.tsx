@@ -7,6 +7,7 @@ import {
   Loader2,
   Plus,
   Pause,
+  Settings as SettingsIcon,
 } from "lucide-react";
 
 import { Card } from "./ui/Card";
@@ -15,6 +16,7 @@ import { stagger, transitions } from "./ui/motion";
 import { api, type LocalConfig, type LocalGame } from "./lib/tauri";
 import { WizardShell } from "./wizard/WizardShell";
 import { GameDetailDrawer } from "./home/GameDetailDrawer";
+import { SettingsModal } from "./home/SettingsModal";
 
 type AppState =
   | { kind: "loading" }
@@ -32,11 +34,14 @@ function displayName(game: LocalGame): string {
 function Home({
   config,
   setConfig,
+  onDisconnect,
 }: {
   config: LocalConfig;
   setConfig: (c: LocalConfig) => void;
+  onDisconnect: () => void;
 }) {
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const selectedGame =
     config.games.find((g) => g.id === selectedGameId) ?? null;
 
@@ -67,15 +72,26 @@ function Home({
                 }.`}
           </p>
         </div>
-        <button
-          type="button"
-          disabled
-          title="Add Game coming in the next iteration"
-          className="glass-hi mt-2 inline-flex cursor-not-allowed items-center gap-2 rounded-[var(--radius-button)] px-4 py-2 text-sm font-medium text-text-3 opacity-60"
-        >
-          <Plus className="h-4 w-4" />
-          Add Game
-        </button>
+        <div className="mt-2 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setSettingsOpen(true)}
+            title="Settings"
+            className="glass-hi inline-flex items-center justify-center rounded-[var(--radius-button)] p-2 text-text-2 transition-colors hover:text-text"
+            aria-label="Settings"
+          >
+            <SettingsIcon className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            disabled
+            title="Add Game coming in the next iteration"
+            className="glass-hi inline-flex cursor-not-allowed items-center gap-2 rounded-[var(--radius-button)] px-4 py-2 text-sm font-medium text-text-3 opacity-60"
+          >
+            <Plus className="h-4 w-4" />
+            Add Game
+          </button>
+        </div>
       </motion.header>
 
       <motion.section
@@ -174,6 +190,13 @@ function Home({
         onClose={() => setSelectedGameId(null)}
         onConfigChange={setConfig}
       />
+      <SettingsModal
+        open={settingsOpen}
+        config={config}
+        onClose={() => setSettingsOpen(false)}
+        onConfigChange={setConfig}
+        onDisconnect={onDisconnect}
+      />
     </main>
   );
 }
@@ -213,6 +236,7 @@ export default function App() {
         <Home
           config={state.config}
           setConfig={(config) => setState({ kind: "configured", config })}
+          onDisconnect={() => setState({ kind: "needs-onboarding" })}
         />
       )}
     </ToastProvider>
