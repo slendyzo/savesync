@@ -128,8 +128,8 @@ jobs:
       # is set as a repo secret. Until you've applied to SignPath's OSS
       # program and uploaded the secrets, this step is a no-op and the
       # released NSIS .exe will show a SmartScreen "unknown publisher"
-      # warning. See NOTES.md → "Code signing setup" for the apply +
-      # wire-secrets walkthrough.
+      # warning. Apply at signpath.org/apply, then add the four
+      # SIGNPATH_* repo secrets and the next tag will be signed.
       - name: SignPath sign (Windows)
         if: matrix.target == 'windows' && startsWith(github.ref, 'refs/tags/v') && env.SIGNPATH_API_TOKEN != ''
         env:
