@@ -19,8 +19,8 @@ use std::path::{Path, PathBuf};
 use std::sync::mpsc::{self, Receiver};
 use std::time::Duration;
 
-use notify::RecursiveMode;
-use notify_debouncer_full::{new_debouncer, DebouncedEvent, Debouncer, FileIdMap};
+use notify::{Config, RecursiveMode};
+use notify_debouncer_full::{new_debouncer_opt, DebouncedEvent, Debouncer, NoCache};
 
 #[derive(Debug, thiserror::Error)]
 pub enum SaveWatcherError {
@@ -34,7 +34,7 @@ pub const DEFAULT_DEBOUNCE: Duration = Duration::from_secs(30);
 
 /// Handle to an active watcher. Drop it to stop watching.
 pub struct SaveDirWatcher {
-    _debouncer: Debouncer<notify::RecommendedWatcher, FileIdMap>,
+    _debouncer: Debouncer<notify::RecommendedWatcher, NoCache>,
     pub events: Receiver<SaveDirEvent>,
 }
 
@@ -52,7 +52,13 @@ pub struct SaveDirEvent {
 /// roughly `debounce` after the first underlying change.
 pub fn watch(dir: &Path, debounce: Duration) -> Result<SaveDirWatcher, SaveWatcherError> {
     let (tx, rx) = mpsc::channel();
-    let mut debouncer = new_debouncer(
+    // `new_debouncer_opt` with an explicit `NoCache` is platform-stable
+    // — the crate's `new_debouncer` shortcut resolves to different cache
+    // types per OS (FileIdMap on macOS, NoCache on Linux), which causes
+    // type-mismatch errors when the SaveDirWatcher struct field is
+    // pinned to one of them. We don't need the file-id cache; rename
+    // tracking isn't part of this watcher's job.
+    let mut debouncer: Debouncer<notify::RecommendedWatcher, NoCache> = new_debouncer_opt(
         debounce,
         None,
         move |result: Result<Vec<DebouncedEvent>, Vec<notify::Error>>| {
@@ -71,6 +77,8 @@ pub fn watch(dir: &Path, debounce: Duration) -> Result<SaveDirWatcher, SaveWatch
                 });
             }
         },
+        NoCache,
+        Config::default(),
     )?;
 
     debouncer.watch(dir, RecursiveMode::Recursive)?;
