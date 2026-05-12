@@ -34,6 +34,10 @@ Thumbs.db
 # Local tool state (not shared)
 local-config/state.json
 
+# Local-only dev artifacts (specs, mockups, README previews — for the
+# project maintainer, not the public)
+docs/artifacts/*.html
+
 # Tauri updater signing keys (never commit private keys)
 updater.key
 updater.key.pub
