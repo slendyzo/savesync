@@ -4091,6 +4091,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "savesync-cli"
+version = "0.2.0"
+dependencies = [
+ "clap",
+ "hostname",
+ "savesync",
+ "thiserror 1.0.69",
+]
+
+[[package]]
 name = "schannel"
 version = "0.1.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"

@@ -1,3 +1,7 @@
+[workspace]
+members = [".", "savesync-cli"]
+resolver = "2"
+
 [package]
 name = "savesync"
 version = "0.2.0"
@@ -15,18 +19,9 @@ default-run = "savesync"
 name = "savesync_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
-# Headless CLI for scripting / dev. Gated behind the `cli` feature so
-# the GUI bundle build doesn't pick it up — Tauri's universal-darwin
-# pipeline only lipo-merges the main binary, so any auto-discovered
-# secondary bin fails the bundle step with "Failed to copy binary".
-# Build it locally with `cargo build --features cli --bin savesync-cli`.
-[[bin]]
-name = "savesync-cli"
-path = "src/bin/savesync-cli/main.rs"
-required-features = ["cli"]
-
-[features]
-cli = []
+# The headless CLI (`savesync-cli`) lives in its own workspace member at
+# ./savesync-cli — see that crate's Cargo.toml for why it can't be a
+# `[[bin]]` here.
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }

@@ -1,0 +1,22 @@
+[package]
+name = "savesync-cli"
+version = "0.2.0"
+edition = "2021"
+description = "Headless CLI driver for SaveSync — useful for scripting, debugging, and end-to-end tests."
+
+# Lives in its own workspace member instead of as a `[[bin]]` inside the
+# Tauri crate. Tauri's bundler enumerates every `[[bin]]` declared by the
+# app crate (ignoring `required-features`) and tries to copy each one
+# into the produced bundle — so a second bin under the same Cargo.toml
+# breaks `tauri build` even when gated. A separate crate keeps it out of
+# that enumeration entirely.
+
+[[bin]]
+name = "savesync-cli"
+path = "src/main.rs"
+
+[dependencies]
+savesync_lib = { path = "..", package = "savesync" }
+clap = { version = "4", features = ["derive", "env"] }
+thiserror = "1"
+hostname = "0.4"
