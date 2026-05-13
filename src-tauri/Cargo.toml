@@ -1,6 +1,6 @@
 [package]
 name = "savesync"
-version = "0.1.0"
+version = "0.2.0"
 description = "Steam Cloud-style save sync for any game, backed by a private git repo."
 authors = ["SaveSync contributors"]
 edition = "2021"

@@ -15,6 +15,8 @@
 #   x86_64-pc-windows-msvc
 #   aarch64-apple-darwin
 #   x86_64-apple-darwin
+#   universal-apple-darwin   (fetches both arches and lipo-merges them;
+#                             requires macOS for the `lipo` tool)
 
 set -euo pipefail
 
@@ -24,6 +26,32 @@ TARGET="${1:-}"
 if [[ -z "$TARGET" ]]; then
   echo "error: target triple required (e.g. x86_64-unknown-linux-gnu)" >&2
   exit 2
+fi
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+BIN_DIR="$REPO_ROOT/src-tauri/bin"
+
+# Universal darwin is fetched as both per-arch binaries, merged via lipo.
+if [[ "$TARGET" == "universal-apple-darwin" ]]; then
+  if ! command -v lipo >/dev/null 2>&1; then
+    echo "error: 'lipo' not found — universal-apple-darwin can only be built on macOS" >&2
+    exit 2
+  fi
+  DEST="$BIN_DIR/git-lfs-${TARGET}"
+  if [[ -f "$DEST" ]]; then
+    echo "git-lfs sidecar already present at $DEST"
+    exit 0
+  fi
+  "$0" aarch64-apple-darwin
+  "$0" x86_64-apple-darwin
+  mkdir -p "$BIN_DIR"
+  lipo -create \
+    "$BIN_DIR/git-lfs-aarch64-apple-darwin" \
+    "$BIN_DIR/git-lfs-x86_64-apple-darwin" \
+    -output "$DEST"
+  chmod +x "$DEST"
+  echo "installed universal sidecar at $DEST"
+  exit 0
 fi
 
 case "$TARGET" in
@@ -37,8 +65,6 @@ case "$TARGET" in
     ;;
 esac
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-BIN_DIR="$REPO_ROOT/src-tauri/bin"
 DEST="$BIN_DIR/git-lfs-${TARGET}${BIN_SUFFIX}"
 
 if [[ -f "$DEST" ]]; then
