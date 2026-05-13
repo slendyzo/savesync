@@ -15,6 +15,19 @@ default-run = "savesync"
 name = "savesync_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
+# Headless CLI for scripting / dev. Gated behind the `cli` feature so
+# the GUI bundle build doesn't pick it up — Tauri's universal-darwin
+# pipeline only lipo-merges the main binary, so any auto-discovered
+# secondary bin fails the bundle step with "Failed to copy binary".
+# Build it locally with `cargo build --features cli --bin savesync-cli`.
+[[bin]]
+name = "savesync-cli"
+path = "src/bin/savesync-cli/main.rs"
+required-features = ["cli"]
+
+[features]
+cli = []
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
