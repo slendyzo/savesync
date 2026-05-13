@@ -110,7 +110,17 @@ mod tests {
             .events
             .recv_timeout(Duration::from_secs(3))
             .expect("expected an event within 3s");
-        assert!(event.representative_path.ends_with("save.dat"));
+        // Path-shape varies per OS: inotify/ReadDirectoryChangesW deliver
+        // the leaf file path, FSEvents delivers the parent directory. The
+        // contract is "we got told something changed in here" — assert
+        // the path is somewhere within (or equal to) the watched tree,
+        // not the specific filename.
+        let watched = tmp.path().canonicalize().unwrap();
+        let evt_path = event.representative_path.canonicalize().unwrap();
+        assert!(
+            evt_path.starts_with(&watched),
+            "event path {evt_path:?} should be within watched dir {watched:?}"
+        );
     }
 
     // Note: the "write burst collapses to a single event" assertion
@@ -126,7 +136,17 @@ mod tests {
         let tmp = tempfile::tempdir().unwrap();
         let watcher = watch(tmp.path(), TEST_DEBOUNCE).unwrap();
 
-        // No writes — no events.
+        // FSEvents on macOS occasionally delivers a startup notification
+        // shortly after the stream begins (the OS-level event id can
+        // include "since-now" framing events). Drain anything that lands
+        // in the first ~debounce window, then assert the watcher stays
+        // quiet over the next interval.
+        while watcher
+            .events
+            .recv_timeout(Duration::from_millis(400))
+            .is_ok()
+        {}
+
         let event = watcher.events.recv_timeout(Duration::from_millis(500));
         assert!(event.is_err(), "no event should fire on a quiet dir");
     }
